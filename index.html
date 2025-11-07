@@ -202,6 +202,27 @@
       color: var(--subtle-text);
     }
 
+    .scoreboard-sections {
+      display: grid;
+      gap: 16px;
+      width: 100%;
+    }
+
+    .scoreboard-section {
+      background: color-mix(in srgb, var(--surface-elevated) 75%, transparent 25%);
+      border-radius: var(--radius-sm);
+      border: var(--border-width) solid var(--border-color);
+      padding: 14px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .scoreboard-section h3 {
+      margin: 0;
+      font-size: 1rem;
+      color: var(--subtle-text);
+    }
+
     .result-chip {
       display: inline-flex;
       align-items: center;
@@ -255,6 +276,152 @@
       box-shadow: inset 0 0 18px rgba(0, 0, 0, 0.2);
     }
 
+    .choice-btn[disabled] {
+      cursor: not-allowed;
+      opacity: 0.55;
+      transform: none;
+    }
+
+    .cooldown-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: color-mix(in srgb, var(--warning) 20%, transparent 80%);
+      color: var(--warning);
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+
+    .cooldown-badge.hidden {
+      display: none;
+    }
+
+    #cpu-choice-label.thinking::before {
+      content: "";
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      border: 2px solid color-mix(in srgb, var(--accent) 80%, white 20%);
+      border-top-color: transparent;
+      display: inline-block;
+      margin-right: 8px;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .coin-card {
+      display: grid;
+      gap: 18px;
+    }
+
+    .coin-area {
+      display: grid;
+      gap: 18px;
+      justify-items: center;
+    }
+
+    .coin-display {
+      display: grid;
+      gap: 12px;
+      justify-items: center;
+    }
+
+    .coin {
+      width: 120px;
+      height: 120px;
+      position: relative;
+      border-radius: 50%;
+      transform-style: preserve-3d;
+      transform: rotateY(var(--coin-rotation, 0deg));
+      animation-duration: var(--coin-duration, 1s);
+    }
+
+    .coin.spinning {
+      animation-name: coin-flip;
+      animation-duration: var(--coin-duration, 1s);
+      animation-fill-mode: forwards;
+      animation-timing-function: ease-in-out;
+    }
+
+    .coin-face {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      backface-visibility: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 1.4rem;
+      background: radial-gradient(circle at top, color-mix(in srgb, var(--accent) 60%, white 40%), color-mix(in srgb, var(--accent) 30%, black 20%));
+      border: var(--border-width) solid var(--border-color);
+      box-shadow: inset 0 6px 12px rgba(0, 0, 0, 0.35);
+      color: #fff;
+    }
+
+    .coin-face.coin-back {
+      transform: rotateY(180deg);
+      background: radial-gradient(circle at top, color-mix(in srgb, var(--warning) 60%, white 40%), color-mix(in srgb, var(--warning) 30%, black 20%));
+    }
+
+    .coin-status {
+      text-align: center;
+      font-weight: 600;
+    }
+
+    .coin-status.success {
+      color: var(--success);
+    }
+
+    .coin-status.fail {
+      color: var(--danger);
+    }
+
+    .coin-controls {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 12px;
+    }
+
+    .coin-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 18px;
+      border-radius: var(--radius-sm);
+      border: var(--border-width) solid var(--border-color);
+      background: color-mix(in srgb, var(--surface-elevated) 60%, transparent 40%);
+      font-weight: 600;
+    }
+
+    .coin-btn.active {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent 75%);
+    }
+
+    .coin-btn[disabled],
+    #coin-flip-btn[disabled] {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    @keyframes coin-flip {
+      from {
+        transform: rotateY(var(--coin-start, 0deg));
+      }
+      to {
+        transform: rotateY(var(--coin-end, 0deg));
+      }
+    }
+
     @media (hover: hover) {
       .choice-btn:hover {
         border-color: var(--accent);
@@ -299,7 +466,7 @@
 
     .history-item {
       display: grid;
-      grid-template-columns: 1.2fr 1.2fr 1.2fr 1fr 1fr;
+      grid-template-columns: 0.6fr 1fr 1fr 1fr 0.9fr 0.9fr;
       align-items: center;
       gap: 8px;
       padding: 10px 12px;
@@ -531,6 +698,12 @@
       }
     }
 
+    @media (min-width: 720px) {
+      .scoreboard-sections {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
     @media (min-width: 960px) {
       main {
         grid-template-columns: 2fr 1fr;
@@ -579,12 +752,28 @@
       <section class="card status-card" aria-label="Marcador y estado">
         <h2>Marcador</h2>
         <div class="status-bar">
-          <div class="scoreboard-grid">
-            <div class="metric"><span>Victorias</span><span id="wins">0</span></div>
-            <div class="metric"><span>Empates</span><span id="draws">0</span></div>
-            <div class="metric"><span>Derrotas</span><span id="losses">0</span></div>
-            <div class="metric"><span>Racha</span><span id="streak">0</span></div>
-            <div class="metric"><span>Multiplicador</span><span id="multiplier">x1</span></div>
+          <div class="scoreboard-sections">
+            <div class="scoreboard-section" aria-label="Estadísticas de Piedra, Papel o Tijera">
+              <h3>Piedra · Papel · Tijera</h3>
+              <div class="scoreboard-grid">
+                <div class="metric"><span>Victorias</span><span id="wins">0</span></div>
+                <div class="metric"><span>Empates</span><span id="draws">0</span></div>
+                <div class="metric"><span>Derrotas</span><span id="losses">0</span></div>
+                <div class="metric"><span>Racha</span><span id="streak">0</span></div>
+                <div class="metric"><span>Multiplicador</span><span id="multiplier">x1</span></div>
+              </div>
+            </div>
+            <div class="scoreboard-section" aria-label="Estadísticas de FlipCoin">
+              <h3>FlipCoin</h3>
+              <div class="scoreboard-grid">
+                <div class="metric"><span>Lanzamientos</span><span id="coin-flips">0</span></div>
+                <div class="metric"><span>Aciertos</span><span id="coin-hits">0</span></div>
+                <div class="metric"><span>Fallos</span><span id="coin-misses">0</span></div>
+                <div class="metric"><span>Racha</span><span id="coin-streak">0</span></div>
+                <div class="metric"><span>Mejor racha</span><span id="coin-best">0</span></div>
+                <div class="metric"><span>Precisión</span><span id="coin-accuracy">0%</span></div>
+              </div>
+            </div>
           </div>
           <div class="progress-wrapper">
             <div id="last-result" class="result-chip draw" aria-live="polite">🤝 Preparado para jugar</div>
@@ -603,6 +792,9 @@
       <section class="card choices-card" aria-label="Selecciona tu jugada">
         <h2>Elige tu jugada</h2>
         <p class="subtle">Puedes usar los botones o las teclas Q (Piedra), W (Papel), E (Tijera).</p>
+        <div id="cooldown-badge" class="cooldown-badge hidden" role="status" aria-live="polite">
+          ⏳ Cooldown: <span id="cooldown-value">5</span>s
+        </div>
         <div id="choices" class="choices" role="group" aria-label="Opciones de jugada"></div>
       </section>
 
@@ -620,10 +812,29 @@
             </div>
             <div class="side" id="cpu-side">
               <div class="avatar" aria-hidden="true">🤖</div>
-              <div id="cpu-choice-label">Pensando…</div>
+              <div id="cpu-choice-label">Listo para jugar</div>
             </div>
           </div>
           <div id="round-message" class="result-chip draw">🎲 ¡Haz tu movimiento!</div>
+        </div>
+      </section>
+
+      <section class="card coin-card" aria-label="Modo FlipCoin">
+        <h2>FlipCoin</h2>
+        <p class="subtle">Selecciona Cara o Cruz, lanza la moneda y trata de acertar.</p>
+        <div class="coin-area">
+          <div class="coin-display" aria-live="polite">
+            <div class="coin" id="coin" role="img" aria-label="Moneda animada">
+              <div class="coin-face coin-front">Cara</div>
+              <div class="coin-face coin-back">Cruz</div>
+            </div>
+            <div id="coin-status" class="coin-status">Elige Cara o Cruz para empezar</div>
+          </div>
+          <div class="coin-controls" role="group" aria-label="Controles de FlipCoin">
+            <button type="button" class="coin-btn" data-coin="heads">🪙 Cara</button>
+            <button type="button" class="coin-btn" data-coin="tails">🎯 Cruz</button>
+            <button type="button" class="primary" id="coin-flip-btn">Lanzar</button>
+          </div>
         </div>
       </section>
 
@@ -642,6 +853,10 @@
           <div>
             <h3>Rendimiento por gesto</h3>
             <div class="bar-chart" id="gesture-chart"></div>
+          </div>
+          <div>
+            <h3>Precisión FlipCoin</h3>
+            <div class="bar-chart" id="coin-chart"></div>
           </div>
         </div>
       </section>
@@ -687,6 +902,14 @@
           <option value="120">120</option>
         </select>
       </div>
+      <div class="form-group">
+        <label for="coin-speed-select">Velocidad de la moneda (FlipCoin)</label>
+        <select id="coin-speed-select">
+          <option value="slow">Lenta (1.5 s)</option>
+          <option value="normal">Normal (1 s)</option>
+          <option value="fast">Rápida (0.8 s)</option>
+        </select>
+      </div>
       <div class="form-group toggle">
         <span>Sonidos</span>
         <label><input type="checkbox" id="sound-toggle" checked /> Activados</label>
@@ -702,6 +925,10 @@
       <div class="form-group">
         <button type="button" class="primary" id="activate-double">Activar Doble Puntos (30s)</button>
         <button type="button" class="ghost" id="activate-nodraw">Bloquear Empates (1 ronda)</button>
+      </div>
+      <div class="form-group">
+        <button type="button" class="ghost" id="run-tests-btn">Ejecutar pruebas automáticas</button>
+        <p class="subtle">Solo se ejecutan bajo demanda y pueden tardar unos segundos.</p>
       </div>
       <div class="achievements">
         <h3>Logros</h3>
@@ -721,11 +948,14 @@
         <button type="button" class="ghost" data-close="help-modal">Cerrar</button>
       </header>
       <div class="help-content">
-        <p>Elige tu gesto para enfrentarte a la IA. Puedes usar los botones o las teclas Q, W, E. Cambia el modo y la dificultad desde Ajustes en cualquier momento.</p>
+        <p>Elige tu gesto para enfrentarte a la IA. Puedes usar los botones o las teclas Q, W, E (y R/T si activas Lagarto-Spock). Cambia el modo y la dificultad desde Ajustes en cualquier momento.</p>
+        <p>Tras elegir un gesto la IA piensa durante 1 segundo antes de revelar su jugada y, al terminar la ronda, se aplica un cooldown visible de 5 segundos que bloquea nuevos intentos (se mostrarán toasts si intentas adelantar el turno).</p>
         <h3>Qué gana a qué</h3>
         <ul id="rules-list"></ul>
         <h3>Atajos</h3>
         <ul id="shortcuts-list"></ul>
+        <h3>FlipCoin</h3>
+        <p>Selecciona Cara o Cruz, lanza la moneda y espera a que termine la animación 3D (1–1.5 s). Durante la animación los controles quedan bloqueados para evitar spam. Puedes ajustar la velocidad en Ajustes y usar los atajos A (Cara), D (Cruz) y Enter (Lanzar).</p>
         <p>Logros disponibles: Calentando (1ª victoria), Imparable (racha 5), Estratega (ganar en difícil), Maratón (50 rondas en un día).</p>
         <p>Créditos: Diseñado y desarrollado para la edición Ultimate de Piedra, Papel o Tijera.</p>
       </div>
@@ -750,6 +980,18 @@
           win: "Ganas",
           lose: "Pierdes",
           draw: "Empate"
+        },
+        games: {
+          ppt: "PPT",
+          coin: "FlipCoin"
+        },
+        coin: {
+          heads: "Cara",
+          tails: "Cruz"
+        },
+        coinOutcome: {
+          win: "Acierto",
+          lose: "Fallo"
         },
         gestures: {
           rock: "Piedra",
@@ -814,6 +1056,17 @@
           spock: "🖖"
         }
       }
+    };
+
+    const COIN_ICONS = {
+      heads: "🪙",
+      tails: "🎯"
+    };
+
+    const COIN_SPEED_MS = {
+      slow: 1500,
+      normal: 1000,
+      fast: 800
     };
 
     /**
@@ -902,6 +1155,9 @@
         },
         lose() {
           playTone(220, 0.25);
+        },
+        coin() {
+          playTone(600, 0.25);
         }
       };
     })();
@@ -973,7 +1229,8 @@
         timer: 60,
         sounds: true,
         animations: true,
-        lizardSpock: false
+        lizardSpock: false,
+        coinSpeed: "normal"
       },
       stats: {
         totalGames: 0,
@@ -987,6 +1244,13 @@
           scissors: { wins: 0, plays: 0 },
           lizard: { wins: 0, plays: 0 },
           spock: { wins: 0, plays: 0 }
+        },
+        coin: {
+          flips: 0,
+          hits: 0,
+          misses: 0,
+          streak: 0,
+          bestStreak: 0
         },
         achievements: {
           warmup: false,
@@ -1003,6 +1267,7 @@
         draws: 0,
         streak: 0,
         history: [],
+        historyCounter: 0,
         lastResult: null,
         startTime: Date.now(),
         timerActive: false,
@@ -1013,6 +1278,19 @@
         powerUps: {
           doublePointsUntil: 0,
           noDrawActive: false
+        },
+        roundLock: false,
+        cooldownActive: false,
+        cooldownEndsAt: 0,
+        cooldownInterval: null,
+        cooldownRemaining: 0,
+        thinking: false,
+        thinkingTimeout: null,
+        pendingPlayer: null,
+        coin: {
+          choice: null,
+          locked: false,
+          rotation: 0
         }
       }
     });
@@ -1031,6 +1309,7 @@
             achievements: { ...base.stats.achievements, ...(saved.stats.achievements || {}) },
             gesturePerformance: { ...base.stats.gesturePerformance, ...(saved.stats.gesturePerformance || {}) }
           };
+          base.stats.coin = { ...base.stats.coin, ...(saved.stats.coin || {}) };
         }
       }
       return base;
@@ -1076,12 +1355,20 @@
         losses: document.getElementById("losses"),
         streak: document.getElementById("streak"),
         multiplier: document.getElementById("multiplier"),
+        coinFlips: document.getElementById("coin-flips"),
+        coinHits: document.getElementById("coin-hits"),
+        coinMisses: document.getElementById("coin-misses"),
+        coinStreak: document.getElementById("coin-streak"),
+        coinBest: document.getElementById("coin-best"),
+        coinAccuracy: document.getElementById("coin-accuracy"),
         lastResult: document.getElementById("last-result"),
         progressLabel: document.getElementById("progress-label"),
         progressSub: document.getElementById("progress-sub"),
         progressBar: document.getElementById("progress-bar"),
         resetBtn: document.getElementById("reset-btn"),
         choices: document.getElementById("choices"),
+        cooldownBadge: document.getElementById("cooldown-badge"),
+        cooldownValue: document.getElementById("cooldown-value"),
         playerChoice: document.getElementById("player-choice-label"),
         cpuChoice: document.getElementById("cpu-choice-label"),
         roundMessage: document.getElementById("round-message"),
@@ -1091,6 +1378,7 @@
         bestStreak: document.getElementById("best-streak"),
         winRate: document.getElementById("win-rate"),
         gestureChart: document.getElementById("gesture-chart"),
+        coinChart: document.getElementById("coin-chart"),
         settingsModal: document.getElementById("settings-modal"),
         helpModal: document.getElementById("help-modal"),
         difficulty: document.getElementById("difficulty-select"),
@@ -1099,11 +1387,13 @@
         bestOf: document.getElementById("bestof-select"),
         timerGroup: document.getElementById("timer-group"),
         timerSelect: document.getElementById("timer-select"),
+        coinSpeed: document.getElementById("coin-speed-select"),
         soundToggle: document.getElementById("sound-toggle"),
         animationToggle: document.getElementById("animation-toggle"),
         lizardToggle: document.getElementById("lizard-toggle"),
         activateDouble: document.getElementById("activate-double"),
         activateNoDraw: document.getElementById("activate-nodraw"),
+        runTestsBtn: document.getElementById("run-tests-btn"),
         achievementEls: Array.from(document.querySelectorAll(".achievement")),
         rulesList: document.getElementById("rules-list"),
         shortcutsList: document.getElementById("shortcuts-list"),
@@ -1112,7 +1402,11 @@
         settingsBtn: document.getElementById("settings-btn"),
         confetti: document.querySelector(".confetti"),
         toastContainer: document.querySelector(".toast-container"),
-        clearHistoryBtn: document.getElementById("clear-history")
+        clearHistoryBtn: document.getElementById("clear-history"),
+        coinElement: document.getElementById("coin"),
+        coinStatus: document.getElementById("coin-status"),
+        coinFlipBtn: document.getElementById("coin-flip-btn"),
+        coinButtons: Array.from(document.querySelectorAll(".coin-btn"))
       };
 
       /**
@@ -1127,7 +1421,14 @@
           button.dataset.gesture = gesture;
           button.innerHTML = `<span class="emoji">${ruleset.icons[gesture]}</span><span>${I18N.es.gestures[gesture]}</span>`;
           button.setAttribute("aria-label", I18N.es.gestures[gesture]);
+          button.disabled = state.session.roundLock;
           dom.choices.appendChild(button);
+        });
+      };
+
+      const updateChoiceAvailability = () => {
+        dom.choices.querySelectorAll("button").forEach((button) => {
+          button.disabled = state.session.roundLock || (state.prefs.mode === "timed" && !state.session.timerActive);
         });
       };
 
@@ -1143,6 +1444,14 @@
         const activeMultiplier = isDoublePointsActive() ? streakMultiplier * 2 : streakMultiplier;
         dom.multiplier.textContent = `x${activeMultiplier}`;
         dom.modeLabel.textContent = `Modo: ${utils.formatMode(state)}`;
+        const coinStats = state.stats.coin;
+        dom.coinFlips.textContent = coinStats.flips;
+        dom.coinHits.textContent = coinStats.hits;
+        dom.coinMisses.textContent = coinStats.misses;
+        dom.coinStreak.textContent = coinStats.streak;
+        dom.coinBest.textContent = coinStats.bestStreak;
+        const accuracy = coinStats.flips ? Math.round((coinStats.hits / coinStats.flips) * 100) : 0;
+        dom.coinAccuracy.textContent = `${accuracy}%`;
       };
 
       /**
@@ -1178,9 +1487,26 @@
        */
       const renderRound = () => {
         const ruleset = utils.getRuleset();
+        if (state.session.thinking) {
+          if (state.session.pendingPlayer) {
+            dom.playerChoice.textContent = `${ruleset.icons[state.session.pendingPlayer]} ${I18N.es.gestures[state.session.pendingPlayer]}`;
+          } else {
+            dom.playerChoice.textContent = "Esperando…";
+          }
+          dom.cpuChoice.textContent = "Pensando…";
+          dom.cpuChoice.classList.add("thinking");
+          dom.roundMessage.textContent = "⌛ La IA está pensando…";
+          dom.roundMessage.className = "result-chip draw";
+          dom.lastResult.textContent = "⌛ Esperando resultado";
+          dom.lastResult.className = "result-chip draw";
+          return;
+        }
+        dom.cpuChoice.classList.remove("thinking");
         if (!state.session.lastResult) {
           dom.roundMessage.textContent = "🎲 ¡Haz tu movimiento!";
           dom.roundMessage.className = "result-chip draw";
+          dom.playerChoice.textContent = "Esperando…";
+          dom.cpuChoice.textContent = "Listo para jugar";
           return;
         }
         const { result, player, cpu } = state.session.lastResult;
@@ -1204,9 +1530,10 @@
           row.className = `history-item ${round.result}`;
           row.innerHTML = `
             <span>#${round.number}</span>
+            <span>${round.gameLabel}</span>
             <span>${round.playerLabel}</span>
             <span>${round.cpuLabel}</span>
-            <span>${I18N.es.results[round.result]}</span>
+            <span>${round.outcomeLabel || I18N.es.results[round.result]}</span>
             <span>${round.time}</span>
           `;
           dom.historyList.appendChild(row);
@@ -1238,6 +1565,17 @@
           dom.gestureChart.appendChild(item);
           dom.gestureChart.appendChild(bar);
         });
+        dom.coinChart.innerHTML = "";
+        const accuracy = stats.coin.flips ? Math.round((stats.coin.hits / stats.coin.flips) * 100) : 0;
+        const coinItem = document.createElement("div");
+        coinItem.innerHTML = `<strong>Precisión</strong> (${stats.coin.hits}/${stats.coin.flips})`;
+        const coinBar = document.createElement("div");
+        coinBar.className = "bar";
+        const coinFill = document.createElement("span");
+        coinFill.style.width = `${accuracy}%`;
+        coinBar.appendChild(coinFill);
+        dom.coinChart.appendChild(coinItem);
+        dom.coinChart.appendChild(coinBar);
       };
 
       /**
@@ -1248,6 +1586,7 @@
         dom.modeSelect.value = state.prefs.mode;
         dom.bestOf.value = state.prefs.bestOf;
         dom.timerSelect.value = state.prefs.timer;
+        dom.coinSpeed.value = state.prefs.coinSpeed;
         dom.soundToggle.checked = state.prefs.sounds;
         dom.animationToggle.checked = state.prefs.animations;
         dom.lizardToggle.checked = state.prefs.lizardSpock;
@@ -1290,6 +1629,16 @@
           li.innerHTML = `<strong>${item.key}</strong> — ${I18N.es.gestures[item.gesture]}`;
           dom.shortcutsList.appendChild(li);
         });
+        const extras = [
+          { key: "A", label: `FlipCoin · ${I18N.es.coin.heads}` },
+          { key: "D", label: `FlipCoin · ${I18N.es.coin.tails}` },
+          { key: "Enter", label: "Lanzar moneda" }
+        ];
+        extras.forEach((item) => {
+          const li = document.createElement("li");
+          li.innerHTML = `<strong>${item.key}</strong> — ${item.label}`;
+          dom.shortcutsList.appendChild(li);
+        });
       };
 
       /**
@@ -1315,9 +1664,10 @@
         renderAchievements();
         renderChoices();
         renderShortcuts();
+        updateChoiceAvailability();
       };
 
-      return { ...dom, renderAll, renderChoices, renderProgress, renderRound, renderScoreboard, renderHistory, renderAnalytics, renderSettings, renderRules, renderAchievements, renderShortcuts };
+      return { ...dom, renderAll, renderChoices, renderProgress, renderRound, renderScoreboard, renderHistory, renderAnalytics, renderSettings, renderRules, renderAchievements, renderShortcuts, updateChoiceAvailability };
     })();
 
     /*
@@ -1425,9 +1775,173 @@
       return utils.now() < state.session.powerUps.doublePointsUntil;
     }
 
+    function startCooldown(duration = 5000) {
+      clearInterval(state.session.cooldownInterval);
+      state.session.cooldownActive = true;
+      state.session.cooldownEndsAt = utils.now() + duration;
+      state.session.cooldownRemaining = Math.ceil(duration / 1000);
+      state.session.roundLock = true;
+      ui.cooldownBadge.classList.remove("hidden");
+      ui.cooldownValue.textContent = state.session.cooldownRemaining;
+      ui.updateChoiceAvailability();
+      const tick = () => {
+        const remainingMs = state.session.cooldownEndsAt - utils.now();
+        const seconds = Math.max(0, Math.ceil(remainingMs / 1000));
+        state.session.cooldownRemaining = seconds;
+        ui.cooldownValue.textContent = seconds;
+        if (seconds <= 0) {
+          clearInterval(state.session.cooldownInterval);
+          state.session.cooldownInterval = null;
+          state.session.cooldownActive = false;
+          state.session.roundLock = false;
+          ui.cooldownBadge.classList.add("hidden");
+          ui.updateChoiceAvailability();
+        }
+      };
+      tick();
+      state.session.cooldownInterval = setInterval(tick, 1000);
+    }
+
+    function stopCooldown() {
+      clearInterval(state.session.cooldownInterval);
+      state.session.cooldownInterval = null;
+      state.session.cooldownActive = false;
+      state.session.cooldownEndsAt = 0;
+      state.session.cooldownRemaining = 0;
+      state.session.roundLock = false;
+      ui.cooldownBadge.classList.add("hidden");
+      ui.updateChoiceAvailability();
+    }
+
+    function queueRound(playerGesture) {
+      if (state.session.roundLock) {
+        if (state.session.cooldownActive) {
+          const remainingMs = Math.max(0, state.session.cooldownEndsAt - utils.now());
+          const seconds = Math.max(1, Math.ceil(remainingMs / 1000));
+          showToast(`⏳ Espera ${seconds}s`);
+        } else if (state.session.thinking) {
+          showToast("🤖 La IA está pensando…");
+        }
+        return;
+      }
+      if (state.prefs.mode === "timed" && !state.session.timerActive) {
+        showToast("⌛ El temporizador ha terminado. Reinicia o cambia el modo.");
+        return;
+      }
+      sound.click();
+      state.session.roundLock = true;
+      state.session.thinking = true;
+      state.session.pendingPlayer = playerGesture;
+      clearTimeout(state.session.thinkingTimeout);
+      ui.updateChoiceAvailability();
+      ui.renderRound();
+      state.session.thinkingTimeout = setTimeout(() => {
+        resolveRound(playerGesture);
+      }, 1000);
+    }
+
+    function flipCoinRandom() {
+      return Math.random() < 0.5 ? "heads" : "tails";
+    }
+
+    function selectCoinChoice(choice) {
+      if (state.session.coin.locked) return;
+      state.session.coin.choice = choice;
+      ui.coinButtons.forEach((btn) => {
+        btn.classList.toggle("active", btn.dataset.coin === choice);
+      });
+      ui.coinStatus.classList.remove("success", "fail");
+      ui.coinStatus.textContent = `Seleccionado: ${COIN_ICONS[choice]} ${I18N.es.coin[choice]}`;
+    }
+
+    function flipCoin() {
+      if (state.session.coin.locked) {
+        showToast("🪙 Espera a que termine la animación");
+        return;
+      }
+      if (!state.session.coin.choice) {
+        showToast("Selecciona Cara o Cruz antes de lanzar");
+        return;
+      }
+      const prefersReduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      const baseDuration = COIN_SPEED_MS[state.prefs.coinSpeed] || COIN_SPEED_MS.normal;
+      const duration = !state.prefs.animations || prefersReduced ? 0 : baseDuration;
+      const result = flipCoinRandom();
+      const startRotation = state.session.coin.rotation || 0;
+      const endRotation = result === "heads" ? 0 : 180;
+      state.session.coin.locked = true;
+      ui.coinButtons.forEach((btn) => {
+        btn.disabled = true;
+      });
+      ui.coinFlipBtn.disabled = true;
+      ui.coinStatus.classList.remove("success", "fail");
+      ui.coinStatus.textContent = "🌀 Lanzando…";
+      if (duration > 0) {
+        ui.coinElement.classList.remove("spinning");
+        void ui.coinElement.offsetWidth;
+        ui.coinElement.style.setProperty("--coin-start", `${startRotation}deg`);
+        ui.coinElement.style.setProperty("--coin-end", `${startRotation + 720 + (result === "heads" ? 0 : 180)}deg`);
+        ui.coinElement.style.setProperty("--coin-duration", `${duration / 1000}s`);
+        ui.coinElement.classList.add("spinning");
+      } else {
+        ui.coinElement.style.setProperty("--coin-rotation", `${endRotation}deg`);
+      }
+      const finalize = () => {
+        ui.coinElement.classList.remove("spinning");
+        ui.coinElement.style.setProperty("--coin-rotation", `${endRotation}deg`);
+        state.session.coin.rotation = endRotation;
+        state.session.coin.locked = false;
+        ui.coinButtons.forEach((btn) => {
+          btn.disabled = false;
+          btn.classList.toggle("active", btn.dataset.coin === state.session.coin.choice);
+        });
+        ui.coinFlipBtn.disabled = false;
+        const isHit = result === state.session.coin.choice;
+        if (isHit) {
+          state.stats.coin.hits += 1;
+          state.stats.coin.streak += 1;
+          ui.coinStatus.classList.add("success");
+          ui.coinStatus.textContent = `✅ ${I18N.es.coinOutcome.win}: ${COIN_ICONS[result]} ${I18N.es.coin[result]} · Tú: ${COIN_ICONS[state.session.coin.choice]} ${I18N.es.coin[state.session.coin.choice]}`;
+        } else {
+          state.stats.coin.misses += 1;
+          state.stats.coin.streak = 0;
+          ui.coinStatus.classList.add("fail");
+          ui.coinStatus.textContent = `❌ ${I18N.es.coinOutcome.lose}: ${COIN_ICONS[result]} ${I18N.es.coin[result]} · Tú: ${COIN_ICONS[state.session.coin.choice]} ${I18N.es.coin[state.session.coin.choice]}`;
+        }
+        state.stats.coin.flips += 1;
+        state.stats.coin.bestStreak = Math.max(state.stats.coin.bestStreak, state.stats.coin.streak);
+        sound.coin();
+        const record = {
+          type: "coin",
+          number: ++state.session.historyCounter,
+          player: state.session.coin.choice,
+          cpu: result,
+          playerLabel: `${COIN_ICONS[state.session.coin.choice]} ${I18N.es.coin[state.session.coin.choice]}`,
+          cpuLabel: `${COIN_ICONS[result]} ${I18N.es.coin[result]}`,
+          gameLabel: I18N.es.games.coin,
+          result: isHit ? "win" : "lose",
+          outcomeLabel: I18N.es.coinOutcome[isHit ? "win" : "lose"],
+          time: new Date().toLocaleTimeString()
+        };
+        state.session.history.push(record);
+        if (state.session.history.length > 60) {
+          state.session.history.splice(0, state.session.history.length - 60);
+        }
+        ui.renderScoreboard();
+        ui.renderHistory();
+        ui.renderAnalytics();
+        storage.save({ prefs: state.prefs, stats: state.stats });
+      };
+      if (duration > 0) {
+        setTimeout(finalize, duration);
+      } else {
+        finalize();
+      }
+    }
+
     function resolveRound(playerGesture) {
       const ruleset = utils.getRuleset();
-      const history = state.session.history;
+      const history = state.session.history.filter((entry) => entry.type === "ppt");
       const difficulty = state.prefs.difficulty;
       const useExtended = state.prefs.lizardSpock;
       let cpuGesture;
@@ -1465,25 +1979,32 @@
         sound.lose();
       } else {
         state.session.draws += 1;
-        sound.click();
       }
 
       updateStats(result, playerGesture);
 
-      const number = state.session.history.length + 1;
+      const number = ++state.session.historyCounter;
       const record = {
+        type: "ppt",
         number,
         player: playerGesture,
         cpu: cpuGesture,
         playerLabel: `${ruleset.icons[playerGesture]} ${I18N.es.gestures[playerGesture]}`,
         cpuLabel: `${ruleset.icons[cpuGesture]} ${I18N.es.gestures[cpuGesture]}`,
+        gameLabel: I18N.es.games.ppt,
         result,
+        outcomeLabel: I18N.es.results[result],
         time: formattedTime,
         points
       };
       state.session.history.push(record);
+      if (state.session.history.length > 60) {
+        state.session.history.splice(0, state.session.history.length - 60);
+      }
       state.session.roundsPlayed += 1;
       state.session.lastResult = { result, player: playerGesture, cpu: cpuGesture };
+      state.session.pendingPlayer = null;
+      state.session.thinking = false;
 
       ui.renderScoreboard();
       ui.renderRound();
@@ -1491,8 +2012,11 @@
       ui.renderAnalytics();
       ui.renderProgress();
       ui.renderAchievements();
+      ui.updateChoiceAvailability();
 
       storage.save({ prefs: state.prefs, stats: state.stats });
+
+      startCooldown();
 
       if (state.prefs.mode === "bestof") {
         checkBestOfVictory();
@@ -1548,11 +2072,24 @@
       state.session.losses = 0;
       state.session.draws = 0;
       state.session.streak = 0;
-      state.session.history = [];
       state.session.roundsPlayed = 0;
       state.session.lastResult = null;
       state.session.powerUps.noDrawActive = false;
       state.session.powerUps.doublePointsUntil = 0;
+      state.session.pendingPlayer = null;
+      state.session.thinking = false;
+      clearTimeout(state.session.thinkingTimeout);
+      state.session.thinkingTimeout = null;
+      stopCooldown();
+      state.session.coin.locked = false;
+      state.session.coin.choice = null;
+      ui.coinButtons.forEach((btn) => {
+        btn.disabled = false;
+        btn.classList.remove("active");
+      });
+      ui.coinFlipBtn.disabled = false;
+      ui.coinStatus.classList.remove("success", "fail");
+      ui.coinStatus.textContent = "Elige Cara o Cruz para empezar";
       if (state.prefs.mode === "bestof") {
         state.session.bestOfTarget = Number(state.prefs.bestOf);
       }
@@ -1561,6 +2098,7 @@
       } else {
         stopTimer();
       }
+      ui.cooldownBadge.classList.add("hidden");
       ui.renderAll();
     }
 
@@ -1572,15 +2110,14 @@
       const target = event.target.closest(".choice-btn");
       if (!target) return;
       const gesture = target.dataset.gesture;
-      sound.click();
-      if (state.prefs.mode === "timed" && !state.session.timerActive) {
-        showToast("⌛ El temporizador ha terminado. Reinicia o cambia el modo.");
-        return;
-      }
-      resolveRound(gesture);
+      queueRound(gesture);
     }
 
     function handleKey(event) {
+      const activeTag = document.activeElement && document.activeElement.tagName;
+      if (activeTag && ["INPUT", "SELECT", "TEXTAREA"].includes(activeTag)) {
+        return;
+      }
       const keyMap = { q: "rock", w: "paper", e: "scissors" };
       if (state.prefs.lizardSpock) {
         keyMap.r = "lizard";
@@ -1593,7 +2130,26 @@
         if (button) {
           button.classList.add("active");
           setTimeout(() => button.classList.remove("active"), 150);
-          resolveRound(gesture);
+          queueRound(gesture);
+        }
+        return;
+      }
+      if (event.key.toLowerCase() === "a") {
+        event.preventDefault();
+        selectCoinChoice("heads");
+        sound.click();
+        return;
+      }
+      if (event.key.toLowerCase() === "d") {
+        event.preventDefault();
+        selectCoinChoice("tails");
+        sound.click();
+        return;
+      }
+      if (event.key === "Enter") {
+        if (state.session.coin.choice) {
+          event.preventDefault();
+          flipCoin();
         }
       }
     }
@@ -1633,6 +2189,7 @@
       state.prefs.sounds = ui.soundToggle.checked;
       state.prefs.animations = ui.animationToggle.checked;
       state.prefs.lizardSpock = ui.lizardToggle.checked;
+      state.prefs.coinSpeed = ui.coinSpeed.value;
       sound.setEnabled(state.prefs.sounds);
       document.body.classList.toggle("animations-off", !state.prefs.animations);
       storage.save({ prefs: state.prefs, stats: state.stats });
@@ -1644,6 +2201,7 @@
 
     function handleHistoryClear() {
       state.session.history = [];
+      state.session.historyCounter = 0;
       ui.renderHistory();
     }
 
@@ -1677,18 +2235,46 @@
     ui.soundToggle.addEventListener("change", handleSettingsChange);
     ui.animationToggle.addEventListener("change", handleSettingsChange);
     ui.lizardToggle.addEventListener("change", handleSettingsChange);
+    ui.coinSpeed.addEventListener("change", handleSettingsChange);
     ui.activateDouble.addEventListener("click", () => {
       activateDoublePoints();
     });
     ui.activateNoDraw.addEventListener("click", () => {
       activateNoDraw();
     });
+    ui.coinButtons.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        selectCoinChoice(btn.dataset.coin);
+        sound.click();
+      });
+    });
+    ui.coinFlipBtn.addEventListener("click", () => {
+      flipCoin();
+    });
+    ui.runTestsBtn.addEventListener("click", async () => {
+      if (ui.runTestsBtn.dataset.running === "true") return;
+      const originalLabel = ui.runTestsBtn.textContent;
+      ui.runTestsBtn.dataset.running = "true";
+      ui.runTestsBtn.disabled = true;
+      ui.runTestsBtn.textContent = "Ejecutando pruebas…";
+      try {
+        await runTests();
+        showToast("✅ Pruebas completadas");
+      } catch (error) {
+        console.error(error);
+        showToast(`❌ ${error.message}`);
+      } finally {
+        ui.runTestsBtn.disabled = false;
+        ui.runTestsBtn.textContent = originalLabel;
+        delete ui.runTestsBtn.dataset.running;
+      }
+    });
 
     /*
       =============================================================
       Funciones de pruebas automáticas para validar la lógica principal.
     */
-    function runTests() {
+    async function runTests() {
       const assert = (cond, msg) => {
         if (!cond) throw new Error(`Test falló: ${msg}`);
       };
@@ -1706,23 +2292,48 @@
           assert(["win", "lose", "draw"].includes(res), `Resultado inválido extendido ${res}`);
         });
       });
-      for (let i = 0; i < 20; i++) {
-        const g = ai.easy([], false);
-        assert(RULESETS.RPS.gestures.includes(g), "IA fácil fuera de rango");
+      for (let i = 0; i < 50; i++) {
+        const easy = ai.easy([], false);
+        const hard = ai.hard([{ player: "rock" }], false);
+        assert(gestures.includes(easy), "IA fácil fuera de rango");
+        assert(gestures.includes(hard), "IA difícil fuera de rango");
       }
-      for (let i = 0; i < 20; i++) {
-        const g = ai.hard([{ player: "rock" }], false);
-        assert(RULESETS.RPS.gestures.includes(g), "IA difícil fuera de rango");
+      const historyMock = Array.from({ length: 5 }, () => ({ player: "rock" }));
+      let counterWins = 0;
+      const trials = 1000;
+      for (let i = 0; i < trials; i++) {
+        const cpu = ai.hard(historyMock, false);
+        if (determineWinner("rock", cpu, false) === "lose") counterWins += 1;
       }
-      const persisted = storage.save({ prefs: state.prefs, stats: state.stats });
+      assert(counterWins / trials >= 0.6, "IA difícil no contraataca ≥60%");
+      stopCooldown();
+      state.session.roundLock = true;
+      startCooldown(120);
+      assert(state.session.roundLock, "Cooldown no bloquea al inicio");
+      await new Promise((resolve) => setTimeout(resolve, 200));
+      assert(!state.session.roundLock, "Cooldown no libera tras el periodo");
+      stopCooldown();
+      let heads = 0;
+      const coinTrials = 10000;
+      for (let i = 0; i < coinTrials; i++) {
+        if (flipCoinRandom() === "heads") heads += 1;
+      }
+      const ratio = heads / coinTrials;
+      assert(ratio >= 0.47 && ratio <= 0.53, "FlipCoin fuera de rango 47%-53%");
+      const testData = { prefs: { theme: "dark" }, stats: { totalGames: 42 } };
+      const persisted = storage.save(testData);
       assert(persisted === true, "Persistencia fallida");
-      console.info("✅ Pruebas completadas");
+      const loaded = storage.load();
+      assert(loaded && loaded.stats && loaded.stats.totalGames === 42, "Persistencia no mantiene datos");
+      storage.save({ prefs: state.prefs, stats: state.stats });
+      return true;
     }
+
+    window.runTests = runTests;
 
     // Inicialización
     initFromPrefs();
     ui.renderAll();
-    runTests();
   </script>
 </body>
 </html>
