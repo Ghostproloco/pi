@@ -1,0 +1,1728 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Piedra, Papel, Tijera — Edición Ultimate</title>
+  <style>
+    /*
+      ==============================
+      Estilos base y diseño responsive
+      ==============================
+      - El layout se construye con un enfoque mobile-first.
+      - Los temas claro y oscuro se gestionan mediante variables CSS en :root
+        y la clase .theme-light / .theme-dark en <body>.
+      - Se incluyen animaciones suaves que respetan prefers-reduced-motion.
+    */
+
+    :root {
+      color-scheme: light dark;
+      --font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      --radius-md: 16px;
+      --radius-sm: 10px;
+      --shadow-soft: 0 20px 45px rgba(0, 0, 0, 0.15);
+      --transition-base: 200ms ease;
+      --transition-long: 350ms ease;
+      --border-width: 1px;
+      --max-width: 1100px;
+      --header-height: 72px;
+    }
+
+    body {
+      margin: 0;
+      font-family: var(--font-family);
+      background: var(--bg-gradient);
+      color: var(--text-color);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 24px 12px 72px;
+      transition: background var(--transition-long), color var(--transition-base);
+    }
+
+    body.theme-dark {
+      --bg-gradient: radial-gradient(circle at top, #121926 0%, #05070c 60%, #020205 100%);
+      --surface-color: rgba(12, 18, 28, 0.85);
+      --surface-elevated: rgba(19, 26, 37, 0.9);
+      --text-color: #f8fafc;
+      --subtle-text: #cbd5f5;
+      --accent: #38bdf8;
+      --accent-muted: rgba(56, 189, 248, 0.15);
+      --danger: #f87171;
+      --success: #34d399;
+      --warning: #fbbf24;
+      --border-color: rgba(148, 163, 184, 0.25);
+      --shadow-toast: 0 12px 24px rgba(15, 23, 42, 0.6);
+    }
+
+    body.theme-light {
+      --bg-gradient: radial-gradient(circle at top, #f8fafc 0%, #e2e8f0 60%, #cbd5f5 100%);
+      --surface-color: rgba(255, 255, 255, 0.88);
+      --surface-elevated: rgba(255, 255, 255, 0.95);
+      --text-color: #111827;
+      --subtle-text: #475569;
+      --accent: #2563eb;
+      --accent-muted: rgba(37, 99, 235, 0.12);
+      --danger: #dc2626;
+      --success: #16a34a;
+      --warning: #d97706;
+      --border-color: rgba(148, 163, 184, 0.35);
+      --shadow-toast: 0 12px 24px rgba(148, 163, 184, 0.35);
+    }
+
+    .app-shell {
+      width: min(100%, var(--max-width));
+      background: var(--surface-color);
+      border-radius: 28px;
+      backdrop-filter: blur(16px);
+      box-shadow: var(--shadow-soft);
+      overflow: hidden;
+      border: var(--border-width) solid var(--border-color);
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 24px;
+      background: var(--surface-elevated);
+      border-bottom: var(--border-width) solid var(--border-color);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    header h1 {
+      font-size: clamp(1.4rem, 2.2vw, 2rem);
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    header h1 span {
+      font-size: 2rem;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    button,
+    .chip,
+    .toggle {
+      font: inherit;
+      border: none;
+      border-radius: var(--radius-sm);
+      padding: 10px 16px;
+      cursor: pointer;
+      transition: transform var(--transition-base), background var(--transition-base), box-shadow var(--transition-base);
+      background: var(--accent-muted);
+      color: var(--text-color);
+    }
+
+    button:focus-visible {
+      outline: 3px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    .ghost {
+      background: transparent;
+      border: var(--border-width) solid var(--border-color);
+    }
+
+    .primary {
+      background: linear-gradient(135deg, var(--accent), color-mix(in srgb, var(--accent) 70%, white 30%));
+      color: white;
+    }
+
+    .danger {
+      background: linear-gradient(135deg, var(--danger), color-mix(in srgb, var(--danger) 70%, white 30%));
+      color: white;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 22px rgba(0, 0, 0, 0.18);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    main {
+      padding: 24px;
+      display: grid;
+      gap: 24px;
+    }
+
+    .status-bar {
+      display: grid;
+      gap: 16px;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    }
+
+    .card {
+      background: var(--surface-elevated);
+      padding: 20px;
+      border-radius: var(--radius-md);
+      border: var(--border-width) solid var(--border-color);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card h2 {
+      margin-top: 0;
+      margin-bottom: 14px;
+      font-size: 1.1rem;
+    }
+
+    .scoreboard-grid {
+      display: grid;
+      gap: 12px;
+    }
+
+    .scoreboard-grid .metric {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px;
+      border-radius: var(--radius-sm);
+      background: color-mix(in srgb, var(--accent-muted) 60%, transparent 40%);
+    }
+
+    .scoreboard-grid .metric span:first-child {
+      font-weight: 600;
+      color: var(--subtle-text);
+    }
+
+    .result-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      border-radius: 999px;
+      font-weight: 600;
+    }
+
+    .result-chip.win {
+      background: color-mix(in srgb, var(--success) 25%, transparent 75%);
+      color: var(--success);
+    }
+
+    .result-chip.lose {
+      background: color-mix(in srgb, var(--danger) 25%, transparent 75%);
+      color: var(--danger);
+    }
+
+    .result-chip.draw {
+      background: color-mix(in srgb, var(--warning) 25%, transparent 75%);
+      color: var(--warning);
+    }
+
+    .choices {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 18px;
+    }
+
+    .choice-btn {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      background: linear-gradient(145deg, color-mix(in srgb, var(--surface-elevated) 80%, white 20%), color-mix(in srgb, var(--surface-color) 80%, black 20%));
+      border: var(--border-width) solid var(--border-color);
+      box-shadow: inset 0 0 0 0 rgba(0, 0, 0, 0.2);
+    }
+
+    .choice-btn span.emoji {
+      font-size: 2.5rem;
+    }
+
+    .choice-btn:active {
+      transform: scale(0.97);
+      box-shadow: inset 0 0 18px rgba(0, 0, 0, 0.2);
+    }
+
+    @media (hover: hover) {
+      .choice-btn:hover {
+        border-color: var(--accent);
+        transform: translateY(-3px);
+      }
+    }
+
+    .round-panel {
+      display: grid;
+      gap: 14px;
+    }
+
+    .versus {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      background: color-mix(in srgb, var(--accent-muted) 60%, transparent 40%);
+      padding: 16px;
+      border-radius: var(--radius-sm);
+    }
+
+    .versus .side {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      align-items: center;
+      text-align: center;
+    }
+
+    .versus .side .avatar {
+      font-size: 2.4rem;
+    }
+
+    .history-list {
+      max-height: 220px;
+      overflow-y: auto;
+      display: grid;
+      gap: 10px;
+      padding-right: 6px;
+    }
+
+    .history-item {
+      display: grid;
+      grid-template-columns: 1.2fr 1.2fr 1.2fr 1fr 1fr;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 12px;
+      border-radius: var(--radius-sm);
+      background: color-mix(in srgb, var(--surface-color) 80%, black 20%);
+      font-size: 0.9rem;
+    }
+
+    .history-item.win {
+      border-left: 4px solid var(--success);
+    }
+
+    .history-item.lose {
+      border-left: 4px solid var(--danger);
+    }
+
+    .history-item.draw {
+      border-left: 4px solid var(--warning);
+    }
+
+    .progress-wrapper {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 12px;
+      background: color-mix(in srgb, var(--accent-muted) 30%, transparent 70%);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .progress-bar span {
+      display: block;
+      height: 100%;
+      background: var(--accent);
+      width: 0%;
+      transition: width var(--transition-long);
+    }
+
+    .toast-container {
+      position: fixed;
+      top: 24px;
+      right: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      z-index: 999;
+    }
+
+    .toast {
+      padding: 12px 18px;
+      border-radius: var(--radius-sm);
+      background: var(--surface-elevated);
+      box-shadow: var(--shadow-toast);
+      border: var(--border-width) solid var(--border-color);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      animation: fade-in var(--transition-long);
+    }
+
+    .toast.fade-out {
+      opacity: 0;
+      transform: translateY(-10px);
+      transition: opacity var(--transition-base), transform var(--transition-base);
+    }
+
+    @keyframes fade-in {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(10, 14, 23, 0.6);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      z-index: 900;
+    }
+
+    .modal-backdrop.active {
+      display: flex;
+    }
+
+    .modal {
+      width: min(100%, 640px);
+      max-height: 90vh;
+      overflow-y: auto;
+      background: var(--surface-elevated);
+      border-radius: var(--radius-md);
+      padding: 24px;
+      border: var(--border-width) solid var(--border-color);
+      box-shadow: var(--shadow-soft);
+      display: grid;
+      gap: 18px;
+    }
+
+    .modal h2 {
+      margin: 0;
+    }
+
+    .form-group {
+      display: grid;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    label {
+      font-weight: 600;
+    }
+
+    select,
+    input[type="number"],
+    input[type="range"],
+    .toggle {
+      border-radius: var(--radius-sm);
+      border: var(--border-width) solid var(--border-color);
+      background: color-mix(in srgb, var(--surface-color) 80%, transparent 20%);
+      padding: 10px 12px;
+      color: var(--text-color);
+    }
+
+    .toggle {
+      display: inline-flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .toggle input {
+      accent-color: var(--accent);
+    }
+
+    .achievements {
+      display: grid;
+      gap: 12px;
+    }
+
+    .achievement {
+      padding: 12px;
+      border-radius: var(--radius-sm);
+      border: var(--border-width) solid var(--border-color);
+      background: color-mix(in srgb, var(--surface-color) 90%, transparent 10%);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .achievement.unlocked {
+      border-color: var(--success);
+      background: color-mix(in srgb, var(--success) 15%, transparent 85%);
+    }
+
+    .analytics {
+      display: grid;
+      gap: 12px;
+    }
+
+    .bar-chart {
+      display: grid;
+      gap: 10px;
+    }
+
+    .bar {
+      height: 12px;
+      background: var(--accent-muted);
+      border-radius: 999px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .bar span {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, var(--accent), color-mix(in srgb, var(--accent) 50%, white 50%));
+      width: 0%;
+      transition: width var(--transition-long);
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    .confetti {
+      position: fixed;
+      pointer-events: none;
+      inset: 0;
+      overflow: hidden;
+      z-index: 800;
+    }
+
+    .confetti span {
+      position: absolute;
+      width: 10px;
+      height: 18px;
+      background: var(--accent);
+      animation: fall 1.6s linear forwards;
+      will-change: transform;
+    }
+
+    @keyframes fall {
+      to {
+        transform: translate3d(var(--x-move), 100vh, 0) rotate(360deg);
+        opacity: 0;
+      }
+    }
+
+    @media (min-width: 960px) {
+      main {
+        grid-template-columns: 2fr 1fr;
+        grid-template-rows: auto auto;
+      }
+      .choices-card {
+        grid-column: 1 / 2;
+      }
+      .round-card {
+        grid-column: 1 / 2;
+        grid-row: 2 / 3;
+      }
+      .history-card {
+        grid-column: 2 / 3;
+        grid-row: 1 / 3;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * {
+        animation-duration: 1ms !important;
+        transition-duration: 1ms !important;
+      }
+    }
+
+    body.animations-off * {
+      transition: none !important;
+      animation: none !important;
+    }
+  </style>
+</head>
+<body class="theme-dark">
+  <div class="confetti" aria-hidden="true"></div>
+  <div class="toast-container" aria-live="polite" aria-atomic="true"></div>
+  <div class="app-shell" role="application">
+    <header>
+      <h1><span>🎮</span><span id="title-label">Piedra, Papel, Tijera — Ultimate</span></h1>
+      <div class="header-actions">
+        <div class="chip" id="mode-label">Modo: Infinito</div>
+        <button type="button" class="ghost" id="help-btn" aria-haspopup="dialog">Ayuda</button>
+        <button type="button" class="ghost" id="settings-btn" aria-haspopup="dialog">Ajustes</button>
+        <button type="button" class="ghost" id="theme-btn" aria-pressed="false">Tema 🌙</button>
+      </div>
+    </header>
+    <main>
+      <section class="card status-card" aria-label="Marcador y estado">
+        <h2>Marcador</h2>
+        <div class="status-bar">
+          <div class="scoreboard-grid">
+            <div class="metric"><span>Victorias</span><span id="wins">0</span></div>
+            <div class="metric"><span>Empates</span><span id="draws">0</span></div>
+            <div class="metric"><span>Derrotas</span><span id="losses">0</span></div>
+            <div class="metric"><span>Racha</span><span id="streak">0</span></div>
+            <div class="metric"><span>Multiplicador</span><span id="multiplier">x1</span></div>
+          </div>
+          <div class="progress-wrapper">
+            <div id="last-result" class="result-chip draw" aria-live="polite">🤝 Preparado para jugar</div>
+            <div class="progress-info">
+              <strong id="progress-label">Modo Infinito</strong>
+              <div class="subtle" id="progress-sub">Juega tantas rondas como quieras.</div>
+            </div>
+            <div class="progress-bar" aria-hidden="true">
+              <span id="progress-bar"></span>
+            </div>
+            <button type="button" class="ghost" id="reset-btn">Reiniciar partida</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="card choices-card" aria-label="Selecciona tu jugada">
+        <h2>Elige tu jugada</h2>
+        <p class="subtle">Puedes usar los botones o las teclas Q (Piedra), W (Papel), E (Tijera).</p>
+        <div id="choices" class="choices" role="group" aria-label="Opciones de jugada"></div>
+      </section>
+
+      <section class="card round-card" aria-label="Resultado de la ronda">
+        <h2>Resultado</h2>
+        <div class="round-panel">
+          <div class="versus" id="versus-panel" aria-live="polite">
+            <div class="side" id="player-side">
+              <div class="avatar" aria-hidden="true">🧑</div>
+              <div id="player-choice-label">Esperando…</div>
+            </div>
+            <div class="side">
+              <div class="avatar" aria-hidden="true">⚡</div>
+              <div>VS</div>
+            </div>
+            <div class="side" id="cpu-side">
+              <div class="avatar" aria-hidden="true">🤖</div>
+              <div id="cpu-choice-label">Pensando…</div>
+            </div>
+          </div>
+          <div id="round-message" class="result-chip draw">🎲 ¡Haz tu movimiento!</div>
+        </div>
+      </section>
+
+      <section class="card history-card" aria-label="Historial de rondas">
+        <h2>Historial reciente</h2>
+        <div class="history-list" id="history-list" aria-live="polite"></div>
+        <button type="button" class="ghost" id="clear-history">Limpiar historial</button>
+      </section>
+
+      <section class="card analytics-card" aria-label="Estadísticas por gesto">
+        <h2>Estadísticas globales</h2>
+        <div class="analytics">
+          <div class="metric"><span>Total de partidas</span><span id="total-games">0</span></div>
+          <div class="metric"><span>Mayor racha</span><span id="best-streak">0</span></div>
+          <div class="metric"><span>Victorias %</span><span id="win-rate">0%</span></div>
+          <div>
+            <h3>Rendimiento por gesto</h3>
+            <div class="bar-chart" id="gesture-chart"></div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Modal de Ajustes -->
+  <div class="modal-backdrop" id="settings-modal" role="dialog" aria-modal="true" aria-labelledby="settings-title">
+    <div class="modal">
+      <header>
+        <h2 id="settings-title">Ajustes</h2>
+        <button type="button" class="ghost" data-close="settings-modal">Cerrar</button>
+      </header>
+      <div class="form-group">
+        <label for="difficulty-select">Dificultad de la IA</label>
+        <select id="difficulty-select">
+          <option value="easy">Fácil</option>
+          <option value="normal">Normal</option>
+          <option value="hard">Difícil</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="mode-select">Modo de juego</label>
+        <select id="mode-select">
+          <option value="infinite">Infinito</option>
+          <option value="bestof">Mejor de N</option>
+          <option value="timed">Contrarreloj</option>
+        </select>
+      </div>
+      <div class="form-group" id="bestof-group">
+        <label for="bestof-select">Selecciona N</label>
+        <select id="bestof-select">
+          <option value="3">3</option>
+          <option value="5">5</option>
+          <option value="7">7</option>
+        </select>
+      </div>
+      <div class="form-group hidden" id="timer-group">
+        <label for="timer-select">Duración (segundos)</label>
+        <select id="timer-select">
+          <option value="30">30</option>
+          <option value="60">60</option>
+          <option value="120">120</option>
+        </select>
+      </div>
+      <div class="form-group toggle">
+        <span>Sonidos</span>
+        <label><input type="checkbox" id="sound-toggle" checked /> Activados</label>
+      </div>
+      <div class="form-group toggle">
+        <span>Animaciones</span>
+        <label><input type="checkbox" id="animation-toggle" checked /> Activadas</label>
+      </div>
+      <div class="form-group toggle">
+        <span>Modo Lagarto-Spock</span>
+        <label><input type="checkbox" id="lizard-toggle" /> Activado</label>
+      </div>
+      <div class="form-group">
+        <button type="button" class="primary" id="activate-double">Activar Doble Puntos (30s)</button>
+        <button type="button" class="ghost" id="activate-nodraw">Bloquear Empates (1 ronda)</button>
+      </div>
+      <div class="achievements">
+        <h3>Logros</h3>
+        <div class="achievement" data-achievement="warmup"><span>🔥 Calentando</span><span class="status">Bloqueado</span></div>
+        <div class="achievement" data-achievement="unstoppable"><span>🚀 Imparable</span><span class="status">Bloqueado</span></div>
+        <div class="achievement" data-achievement="strategist"><span>🧠 Estratega</span><span class="status">Bloqueado</span></div>
+        <div class="achievement" data-achievement="marathon"><span>🏃‍♂️ Maratón</span><span class="status">Bloqueado</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Ayuda -->
+  <div class="modal-backdrop" id="help-modal" role="dialog" aria-modal="true" aria-labelledby="help-title">
+    <div class="modal">
+      <header>
+        <h2 id="help-title">Ayuda &amp; Reglas</h2>
+        <button type="button" class="ghost" data-close="help-modal">Cerrar</button>
+      </header>
+      <div class="help-content">
+        <p>Elige tu gesto para enfrentarte a la IA. Puedes usar los botones o las teclas Q, W, E. Cambia el modo y la dificultad desde Ajustes en cualquier momento.</p>
+        <h3>Qué gana a qué</h3>
+        <ul id="rules-list"></ul>
+        <h3>Atajos</h3>
+        <ul id="shortcuts-list"></ul>
+        <p>Logros disponibles: Calentando (1ª victoria), Imparable (racha 5), Estratega (ganar en difícil), Maratón (50 rondas en un día).</p>
+        <p>Créditos: Diseñado y desarrollado para la edición Ultimate de Piedra, Papel o Tijera.</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    "use strict";
+    /*
+      =============================================================
+      i18n básico: estructura preparada para permitir traducir
+      etiquetas clave en el futuro. Se usa 'es' por defecto.
+    */
+    const I18N = {
+      es: {
+        modes: {
+          infinite: "Infinito",
+          bestof: "Mejor de N",
+          timed: "Contrarreloj"
+        },
+        results: {
+          win: "Ganas",
+          lose: "Pierdes",
+          draw: "Empate"
+        },
+        gestures: {
+          rock: "Piedra",
+          paper: "Papel",
+          scissors: "Tijera",
+          lizard: "Lagarto",
+          spock: "Spock"
+        }
+      }
+    };
+
+    /*
+      =============================================================
+      Definición de reglas y lógica pura para calcular resultados.
+      La función determineWinner siempre devuelve "win", "lose" o "draw".
+    */
+    const RULESETS = {
+      RPS: {
+        gestures: ["rock", "paper", "scissors"],
+        matrix: {
+          rock: { rock: "draw", paper: "lose", scissors: "win" },
+          paper: { rock: "win", paper: "draw", scissors: "lose" },
+          scissors: { rock: "lose", paper: "win", scissors: "draw" }
+        },
+        relationships: [
+          "Piedra aplasta a Tijera",
+          "Papel envuelve a Piedra",
+          "Tijera corta Papel"
+        ],
+        icons: {
+          rock: "🪨",
+          paper: "📄",
+          scissors: "✂️"
+        }
+      },
+      RPSLS: {
+        gestures: ["rock", "paper", "scissors", "lizard", "spock"],
+        matrix: {
+          rock: { rock: "draw", paper: "lose", scissors: "win", lizard: "win", spock: "lose" },
+          paper: { rock: "win", paper: "draw", scissors: "lose", lizard: "lose", spock: "win" },
+          scissors: { rock: "lose", paper: "win", scissors: "draw", lizard: "win", spock: "lose" },
+          lizard: { rock: "lose", paper: "win", scissors: "lose", lizard: "draw", spock: "win" },
+          spock: { rock: "win", paper: "lose", scissors: "win", lizard: "lose", spock: "draw" }
+        },
+        relationships: [
+          "Tijeras cortan Papel",
+          "Papel cubre Piedra",
+          "Piedra aplasta Lagarto",
+          "Lagarto envenena Spock",
+          "Spock rompe Tijeras",
+          "Tijeras decapitan Lagarto",
+          "Lagarto come Papel",
+          "Papel desautoriza Spock",
+          "Spock vaporiza Piedra",
+          "Piedra rompe Tijeras"
+        ],
+        icons: {
+          rock: "🪨",
+          paper: "📄",
+          scissors: "✂️",
+          lizard: "🦎",
+          spock: "🖖"
+        }
+      }
+    };
+
+    /**
+     * Determina el resultado comparando los gestos del jugador y la IA.
+     * @param {string} player - Gesto del jugador
+     * @param {string} cpu - Gesto del ordenador
+     * @param {boolean} useExtended - true si está activo Lagarto-Spock
+     * @returns {"win"|"lose"|"draw"}
+     */
+    function determineWinner(player, cpu, useExtended = false) {
+      const ruleset = useExtended ? RULESETS.RPSLS : RULESETS.RPS;
+      const playerRules = ruleset.matrix[player];
+      if (!playerRules) return "draw";
+      return playerRules[cpu] ?? "draw";
+    }
+
+    /*
+      =============================================================
+      Persistencia ligera con localStorage. Se encapsula en try/catch
+      para evitar errores si el almacenamiento no está disponible.
+    */
+    const storage = (() => {
+      const KEY = "ppt-ultimate-state";
+      const load = () => {
+        try {
+          const raw = localStorage.getItem(KEY);
+          if (!raw) return null;
+          return JSON.parse(raw);
+        } catch (err) {
+          console.warn("No se pudo cargar el estado", err);
+          return null;
+        }
+      };
+      const save = (data) => {
+        try {
+          localStorage.setItem(KEY, JSON.stringify(data));
+          return true;
+        } catch (err) {
+          console.warn("No se pudo guardar el estado", err);
+          return false;
+        }
+      };
+      return { load, save };
+    })();
+
+    /*
+      =============================================================
+      Gestor de sonidos mediante Web Audio API. Se crean tres osciladores
+      simples para click, victoria y derrota.
+    */
+    const sound = (() => {
+      let ctx;
+      let enabled = true;
+      const ensureContext = () => {
+        if (!ctx) {
+          ctx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+      };
+      const playTone = (frequency, duration = 0.15) => {
+        if (!enabled) return;
+        try {
+          ensureContext();
+          const oscillator = ctx.createOscillator();
+          const gain = ctx.createGain();
+          oscillator.type = "sine";
+          oscillator.frequency.value = frequency;
+          gain.gain.setValueAtTime(0.001, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.15, ctx.currentTime + 0.02);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+          oscillator.connect(gain).connect(ctx.destination);
+          oscillator.start();
+          oscillator.stop(ctx.currentTime + duration);
+        } catch (err) {
+          console.warn("No se pudo reproducir sonido", err);
+        }
+      };
+      return {
+        setEnabled(value) {
+          enabled = value;
+        },
+        click() {
+          playTone(440, 0.08);
+        },
+        win() {
+          playTone(880, 0.2);
+        },
+        lose() {
+          playTone(220, 0.25);
+        }
+      };
+    })();
+
+    /*
+      =============================================================
+      Generadores de decisiones para la IA en los tres niveles de dificultad.
+      - easy: totalmente aleatorio.
+      - normal: 70% aleatorio, 30% intenta contrarrestar el último gesto del jugador.
+      - hard: analiza las últimas 5 elecciones del jugador y contraataca la más frecuente.
+    */
+    const ai = (() => {
+      const getRandomGesture = (gestures) => gestures[Math.floor(Math.random() * gestures.length)];
+
+      const counterFor = (gesture, useExtended) => {
+        const ruleset = useExtended ? RULESETS.RPSLS : RULESETS.RPS;
+        const outcomes = ruleset.matrix;
+        const counters = Object.entries(outcomes).filter(([g]) => outcomes[g][gesture] === "win");
+        if (!counters.length) return getRandomGesture(ruleset.gestures);
+        return counters[Math.floor(Math.random() * counters.length)][0];
+      };
+
+      const easy = (history, useExtended) => {
+        const ruleset = useExtended ? RULESETS.RPSLS : RULESETS.RPS;
+        return getRandomGesture(ruleset.gestures);
+      };
+
+      const normal = (history, useExtended) => {
+        const ruleset = useExtended ? RULESETS.RPSLS : RULESETS.RPS;
+        if (!history.length || Math.random() < 0.7) {
+          return getRandomGesture(ruleset.gestures);
+        }
+        const lastPlayer = history[history.length - 1].player;
+        return counterFor(lastPlayer, useExtended);
+      };
+
+      const hard = (history, useExtended) => {
+        const ruleset = useExtended ? RULESETS.RPSLS : RULESETS.RPS;
+        if (history.length < 2) {
+          return getRandomGesture(ruleset.gestures);
+        }
+        const recent = history.slice(-5);
+        const counts = {};
+        recent.forEach((round) => {
+          counts[round.player] = (counts[round.player] || 0) + 1;
+        });
+        const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+        const predicted = sorted[0][0];
+        if (Math.random() < 0.65) {
+          return counterFor(predicted, useExtended);
+        }
+        return getRandomGesture(ruleset.gestures);
+      };
+
+      return { easy, normal, hard };
+    })();
+
+    /*
+      =============================================================
+      Estado central del juego: preferencias persistentes, estadísticas
+      globales y datos de la sesión actual.
+    */
+    const defaultState = () => ({
+      prefs: {
+        theme: "dark",
+        difficulty: "normal",
+        mode: "infinite",
+        bestOf: 3,
+        timer: 60,
+        sounds: true,
+        animations: true,
+        lizardSpock: false
+      },
+      stats: {
+        totalGames: 0,
+        wins: 0,
+        losses: 0,
+        draws: 0,
+        bestStreak: 0,
+        gesturePerformance: {
+          rock: { wins: 0, plays: 0 },
+          paper: { wins: 0, plays: 0 },
+          scissors: { wins: 0, plays: 0 },
+          lizard: { wins: 0, plays: 0 },
+          spock: { wins: 0, plays: 0 }
+        },
+        achievements: {
+          warmup: false,
+          unstoppable: false,
+          strategist: false,
+          marathon: false
+        },
+        lastPlayed: null,
+        dailyRounds: 0
+      },
+      session: {
+        wins: 0,
+        losses: 0,
+        draws: 0,
+        streak: 0,
+        history: [],
+        lastResult: null,
+        startTime: Date.now(),
+        timerActive: false,
+        timerRemaining: 0,
+        timerInterval: null,
+        bestOfTarget: 3,
+        roundsPlayed: 0,
+        powerUps: {
+          doublePointsUntil: 0,
+          noDrawActive: false
+        }
+      }
+    });
+
+    const state = (() => {
+      const base = defaultState();
+      const saved = storage.load();
+      if (saved) {
+        if (saved.prefs) {
+          base.prefs = { ...base.prefs, ...saved.prefs };
+        }
+        if (saved.stats) {
+          base.stats = {
+            ...base.stats,
+            ...saved.stats,
+            achievements: { ...base.stats.achievements, ...(saved.stats.achievements || {}) },
+            gesturePerformance: { ...base.stats.gesturePerformance, ...(saved.stats.gesturePerformance || {}) }
+          };
+        }
+      }
+      return base;
+    })();
+
+    /*
+      =============================================================
+      Utilidades varias.
+    */
+    const utils = {
+      formatMode(state) {
+        const modeLabel = I18N.es.modes[state.prefs.mode];
+        if (state.prefs.mode === "bestof") {
+          return `${modeLabel} (${state.session.wins + state.session.losses + state.session.draws}/${state.session.bestOfTarget})`;
+        }
+        if (state.prefs.mode === "timed") {
+          const seconds = Math.max(0, Math.round(state.session.timerRemaining / 1000));
+          return `${modeLabel} (${seconds}s)`;
+        }
+        return modeLabel;
+      },
+      getRuleset() {
+        return state.prefs.lizardSpock ? RULESETS.RPSLS : RULESETS.RPS;
+      },
+      now() {
+        return Date.now();
+      },
+      clamp(value, min, max) {
+        return Math.min(Math.max(value, min), max);
+      }
+    };
+
+    /*
+      =============================================================
+      Gestión de UI: renderizado reactivo básico que actualiza el DOM
+      tras cambios en el estado. Se agrupan referencias a elementos.
+    */
+    const ui = (() => {
+      const dom = {
+        modeLabel: document.getElementById("mode-label"),
+        wins: document.getElementById("wins"),
+        draws: document.getElementById("draws"),
+        losses: document.getElementById("losses"),
+        streak: document.getElementById("streak"),
+        multiplier: document.getElementById("multiplier"),
+        lastResult: document.getElementById("last-result"),
+        progressLabel: document.getElementById("progress-label"),
+        progressSub: document.getElementById("progress-sub"),
+        progressBar: document.getElementById("progress-bar"),
+        resetBtn: document.getElementById("reset-btn"),
+        choices: document.getElementById("choices"),
+        playerChoice: document.getElementById("player-choice-label"),
+        cpuChoice: document.getElementById("cpu-choice-label"),
+        roundMessage: document.getElementById("round-message"),
+        historyList: document.getElementById("history-list"),
+        clearHistory: document.getElementById("clear-history"),
+        totalGames: document.getElementById("total-games"),
+        bestStreak: document.getElementById("best-streak"),
+        winRate: document.getElementById("win-rate"),
+        gestureChart: document.getElementById("gesture-chart"),
+        settingsModal: document.getElementById("settings-modal"),
+        helpModal: document.getElementById("help-modal"),
+        difficulty: document.getElementById("difficulty-select"),
+        modeSelect: document.getElementById("mode-select"),
+        bestOfGroup: document.getElementById("bestof-group"),
+        bestOf: document.getElementById("bestof-select"),
+        timerGroup: document.getElementById("timer-group"),
+        timerSelect: document.getElementById("timer-select"),
+        soundToggle: document.getElementById("sound-toggle"),
+        animationToggle: document.getElementById("animation-toggle"),
+        lizardToggle: document.getElementById("lizard-toggle"),
+        activateDouble: document.getElementById("activate-double"),
+        activateNoDraw: document.getElementById("activate-nodraw"),
+        achievementEls: Array.from(document.querySelectorAll(".achievement")),
+        rulesList: document.getElementById("rules-list"),
+        shortcutsList: document.getElementById("shortcuts-list"),
+        themeBtn: document.getElementById("theme-btn"),
+        helpBtn: document.getElementById("help-btn"),
+        settingsBtn: document.getElementById("settings-btn"),
+        confetti: document.querySelector(".confetti"),
+        toastContainer: document.querySelector(".toast-container"),
+        clearHistoryBtn: document.getElementById("clear-history")
+      };
+
+      /**
+       * Renderiza los botones de gestos según el modo actual (RPS o RPSLS).
+       */
+      const renderChoices = () => {
+        const ruleset = utils.getRuleset();
+        dom.choices.innerHTML = "";
+        ruleset.gestures.forEach((gesture) => {
+          const button = document.createElement("button");
+          button.className = "choice-btn";
+          button.dataset.gesture = gesture;
+          button.innerHTML = `<span class="emoji">${ruleset.icons[gesture]}</span><span>${I18N.es.gestures[gesture]}</span>`;
+          button.setAttribute("aria-label", I18N.es.gestures[gesture]);
+          dom.choices.appendChild(button);
+        });
+      };
+
+      /**
+       * Actualiza la sección del marcador.
+       */
+      const renderScoreboard = () => {
+        dom.wins.textContent = state.session.wins;
+        dom.draws.textContent = state.session.draws;
+        dom.losses.textContent = state.session.losses;
+        dom.streak.textContent = state.session.streak;
+        const streakMultiplier = state.session.streak >= 3 ? 2 : 1;
+        const activeMultiplier = isDoublePointsActive() ? streakMultiplier * 2 : streakMultiplier;
+        dom.multiplier.textContent = `x${activeMultiplier}`;
+        dom.modeLabel.textContent = `Modo: ${utils.formatMode(state)}`;
+      };
+
+      /**
+       * Actualiza el panel de progreso según el modo activo.
+       */
+      const renderProgress = () => {
+        dom.progressLabel.textContent = utils.formatMode(state);
+        let subtitle = "";
+        if (state.prefs.mode === "infinite") {
+          subtitle = "Juega tantas rondas como quieras.";
+          dom.progressBar.style.width = "0%";
+        } else if (state.prefs.mode === "bestof") {
+          subtitle = `Rondas jugadas: ${state.session.roundsPlayed}/${state.session.bestOfTarget}`;
+          const totalNeeded = state.session.bestOfTarget;
+          dom.progressBar.style.width = `${(state.session.roundsPlayed / totalNeeded) * 100}%`;
+        } else if (state.prefs.mode === "timed") {
+          subtitle = `Tiempo restante: ${Math.max(0, Math.round(state.session.timerRemaining / 1000))}s`;
+          const total = state.prefs.timer * 1000;
+          const remaining = utils.clamp(state.session.timerRemaining, 0, total);
+          dom.progressBar.style.width = `${(remaining / total) * 100}%`;
+        }
+        const statuses = [];
+        if (isDoublePointsActive()) statuses.push("⚡ Doble puntos activo");
+        if (state.session.powerUps.noDrawActive) statuses.push("🛡️ Bloqueo de empates listo");
+        if (statuses.length) {
+          subtitle += subtitle ? ` · ${statuses.join(" · ")}` : statuses.join(" · ");
+        }
+        dom.progressSub.textContent = subtitle;
+      };
+
+      /**
+       * Presenta el resultado de la última ronda con estilos y emojis.
+       */
+      const renderRound = () => {
+        const ruleset = utils.getRuleset();
+        if (!state.session.lastResult) {
+          dom.roundMessage.textContent = "🎲 ¡Haz tu movimiento!";
+          dom.roundMessage.className = "result-chip draw";
+          return;
+        }
+        const { result, player, cpu } = state.session.lastResult;
+        const label = I18N.es.results[result];
+        const emoji = result === "win" ? "🏆" : result === "lose" ? "💥" : "🤝";
+        dom.roundMessage.textContent = `${emoji} ${label}`;
+        dom.roundMessage.className = `result-chip ${result}`;
+        dom.playerChoice.textContent = `${ruleset.icons[player]} ${I18N.es.gestures[player]}`;
+        dom.cpuChoice.textContent = `${ruleset.icons[cpu]} ${I18N.es.gestures[cpu]}`;
+        dom.lastResult.textContent = `${emoji} ${label}`;
+        dom.lastResult.className = `result-chip ${result}`;
+      };
+
+      /**
+       * Rellena la lista de historial con las últimas 10 rondas.
+       */
+      const renderHistory = () => {
+        dom.historyList.innerHTML = "";
+        state.session.history.slice(-10).reverse().forEach((round) => {
+          const row = document.createElement("div");
+          row.className = `history-item ${round.result}`;
+          row.innerHTML = `
+            <span>#${round.number}</span>
+            <span>${round.playerLabel}</span>
+            <span>${round.cpuLabel}</span>
+            <span>${I18N.es.results[round.result]}</span>
+            <span>${round.time}</span>
+          `;
+          dom.historyList.appendChild(row);
+        });
+      };
+
+      /**
+       * Actualiza métricas globales y gráfico por gesto.
+       */
+      const renderAnalytics = () => {
+        const { stats } = state;
+        dom.totalGames.textContent = stats.totalGames;
+        dom.bestStreak.textContent = stats.bestStreak;
+        const winRate = stats.totalGames ? Math.round((stats.wins / stats.totalGames) * 100) : 0;
+        dom.winRate.textContent = `${winRate}%`;
+        dom.gestureChart.innerHTML = "";
+        const gestures = utils.getRuleset().gestures;
+        gestures.forEach((gesture) => {
+          const perf = stats.gesturePerformance[gesture];
+          if (!perf) return;
+          const rate = perf.plays ? Math.round((perf.wins / perf.plays) * 100) : 0;
+          const item = document.createElement("div");
+          item.innerHTML = `<strong>${I18N.es.gestures[gesture]}</strong> (${perf.wins}/${perf.plays})`;
+          const bar = document.createElement("div");
+          bar.className = "bar";
+          const fill = document.createElement("span");
+          fill.style.width = `${rate}%`;
+          bar.appendChild(fill);
+          dom.gestureChart.appendChild(item);
+          dom.gestureChart.appendChild(bar);
+        });
+      };
+
+      /**
+       * Muestra/oculta campos en Ajustes según modo.
+       */
+      const renderSettings = () => {
+        dom.difficulty.value = state.prefs.difficulty;
+        dom.modeSelect.value = state.prefs.mode;
+        dom.bestOf.value = state.prefs.bestOf;
+        dom.timerSelect.value = state.prefs.timer;
+        dom.soundToggle.checked = state.prefs.sounds;
+        dom.animationToggle.checked = state.prefs.animations;
+        dom.lizardToggle.checked = state.prefs.lizardSpock;
+        dom.bestOfGroup.classList.toggle("hidden", state.prefs.mode !== "bestof");
+        dom.timerGroup.classList.toggle("hidden", state.prefs.mode !== "timed");
+      };
+
+      /**
+       * Muestra las reglas en el modal de ayuda.
+       */
+      const renderRules = () => {
+        const ruleset = utils.getRuleset();
+        dom.rulesList.innerHTML = "";
+        ruleset.relationships.forEach((rule) => {
+          const li = document.createElement("li");
+          li.textContent = rule;
+          dom.rulesList.appendChild(li);
+        });
+      };
+
+      /**
+       * Actualiza la lista de atajos de teclado según los gestos disponibles.
+       */
+      const renderShortcuts = () => {
+        const base = [
+          { key: "Q", gesture: "rock" },
+          { key: "W", gesture: "paper" },
+          { key: "E", gesture: "scissors" }
+        ];
+        const extended = state.prefs.lizardSpock
+          ? [
+              ...base,
+              { key: "R", gesture: "lizard" },
+              { key: "T", gesture: "spock" }
+            ]
+          : base;
+        dom.shortcutsList.innerHTML = "";
+        extended.forEach((item) => {
+          const li = document.createElement("li");
+          li.innerHTML = `<strong>${item.key}</strong> — ${I18N.es.gestures[item.gesture]}`;
+          dom.shortcutsList.appendChild(li);
+        });
+      };
+
+      /**
+       * Refresca estado de logros en Ajustes.
+       */
+      const renderAchievements = () => {
+        dom.achievementEls.forEach((el) => {
+          const id = el.dataset.achievement;
+          const unlocked = state.stats.achievements[id];
+          el.classList.toggle("unlocked", unlocked);
+          el.querySelector(".status").textContent = unlocked ? "Desbloqueado" : "Bloqueado";
+        });
+      };
+
+      const renderAll = () => {
+        renderScoreboard();
+        renderProgress();
+        renderRound();
+        renderHistory();
+        renderAnalytics();
+        renderSettings();
+        renderRules();
+        renderAchievements();
+        renderChoices();
+        renderShortcuts();
+      };
+
+      return { ...dom, renderAll, renderChoices, renderProgress, renderRound, renderScoreboard, renderHistory, renderAnalytics, renderSettings, renderRules, renderAchievements, renderShortcuts };
+    })();
+
+    /*
+      =============================================================
+      Sistema de toasts para notificaciones cortas.
+    */
+    function showToast(message) {
+      const toast = document.createElement("div");
+      toast.className = "toast";
+      toast.textContent = message;
+      ui.toastContainer.appendChild(toast);
+      setTimeout(() => {
+        toast.classList.add("fade-out");
+        const remove = () => toast.remove();
+        toast.addEventListener("transitionend", remove, { once: true });
+        setTimeout(remove, 600);
+      }, 2400);
+    }
+
+    /*
+      =============================================================
+      Confeti sencillo mediante elementos <span> animados.
+    */
+    function triggerConfetti() {
+      if (!state.prefs.animations || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        return;
+      }
+      const count = 40;
+      for (let i = 0; i < count; i++) {
+        const piece = document.createElement("span");
+        piece.style.left = `${Math.random() * 100}%`;
+        piece.style.background = `hsl(${Math.random() * 360}, 80%, 60%)`;
+        piece.style.setProperty("--x-move", `${(Math.random() - 0.5) * 200}px`);
+        ui.confetti.appendChild(piece);
+        setTimeout(() => piece.remove(), 1600);
+      }
+    }
+
+    /*
+      =============================================================
+      Actualización de estadísticas y logros globales.
+    */
+    function updateStats(result, playerGesture) {
+      state.stats.totalGames += 1;
+      if (result === "win") state.stats.wins += 1;
+      if (result === "lose") state.stats.losses += 1;
+      if (result === "draw") state.stats.draws += 1;
+      state.stats.bestStreak = Math.max(state.stats.bestStreak, state.session.streak);
+      const gesturePerf = state.stats.gesturePerformance[playerGesture];
+      if (gesturePerf) {
+        gesturePerf.plays += 1;
+        if (result === "win") gesturePerf.wins += 1;
+      }
+      const today = new Date().toDateString();
+      if (state.stats.lastPlayed !== today) {
+        state.stats.lastPlayed = today;
+        state.stats.dailyRounds = 1;
+      } else {
+        state.stats.dailyRounds = (state.stats.dailyRounds || 0) + 1;
+      }
+      if (!state.stats.achievements.warmup && state.stats.wins >= 1) {
+        state.stats.achievements.warmup = true;
+        showToast("🔥 Logro desbloqueado: Calentando");
+      }
+      if (result === "win" && state.session.streak >= 5) {
+        if (!state.stats.achievements.unstoppable) {
+          state.stats.achievements.unstoppable = true;
+          showToast("🚀 Logro desbloqueado: Imparable");
+        }
+        triggerConfetti();
+      }
+      if (!state.stats.achievements.strategist && state.prefs.difficulty === "hard" && result === "win") {
+        state.stats.achievements.strategist = true;
+        showToast("🧠 Logro desbloqueado: Estratega");
+      }
+      if (!state.stats.achievements.marathon && state.stats.dailyRounds >= 50) {
+        state.stats.achievements.marathon = true;
+        showToast("🏃‍♂️ Logro desbloqueado: Maratón");
+      }
+    }
+
+    /*
+      =============================================================
+      Gestión de power-ups.
+    */
+    function activateDoublePoints() {
+      state.session.powerUps.doublePointsUntil = utils.now() + 30000;
+      showToast("⚡ Doble puntos activado por 30 segundos");
+      ui.renderScoreboard();
+      ui.renderProgress();
+      const remaining = Math.max(0, state.session.powerUps.doublePointsUntil - utils.now());
+      setTimeout(() => {
+        ui.renderScoreboard();
+        ui.renderProgress();
+      }, remaining + 120);
+    }
+
+    function activateNoDraw() {
+      state.session.powerUps.noDrawActive = true;
+      showToast("🛡️ Bloqueo de empates activo por 1 ronda");
+      ui.renderProgress();
+    }
+
+    function isDoublePointsActive() {
+      return utils.now() < state.session.powerUps.doublePointsUntil;
+    }
+
+    function resolveRound(playerGesture) {
+      const ruleset = utils.getRuleset();
+      const history = state.session.history;
+      const difficulty = state.prefs.difficulty;
+      const useExtended = state.prefs.lizardSpock;
+      let cpuGesture;
+      if (difficulty === "easy") cpuGesture = ai.easy(history, useExtended);
+      else if (difficulty === "hard") cpuGesture = ai.hard(history, useExtended);
+      else cpuGesture = ai.normal(history, useExtended);
+
+      // Si el power-up de bloqueo de empates está activo, reintentar hasta que no haya empate.
+      if (state.session.powerUps.noDrawActive) {
+        let attempts = 0;
+        while (determineWinner(playerGesture, cpuGesture, useExtended) === "draw" && attempts < 5) {
+          cpuGesture = ai.easy(history, useExtended);
+          attempts++;
+        }
+        state.session.powerUps.noDrawActive = false;
+      }
+
+      const result = determineWinner(playerGesture, cpuGesture, useExtended);
+      const now = new Date();
+      const formattedTime = now.toLocaleTimeString();
+      let points = 1;
+      if (result === "win") {
+        state.session.wins += 1;
+        state.session.streak += 1;
+        if (state.session.streak >= 3) {
+          points += 1; // bonus por racha
+        }
+        if (isDoublePointsActive()) {
+          points *= 2;
+        }
+        sound.win();
+      } else if (result === "lose") {
+        state.session.losses += 1;
+        state.session.streak = 0;
+        sound.lose();
+      } else {
+        state.session.draws += 1;
+        sound.click();
+      }
+
+      updateStats(result, playerGesture);
+
+      const number = state.session.history.length + 1;
+      const record = {
+        number,
+        player: playerGesture,
+        cpu: cpuGesture,
+        playerLabel: `${ruleset.icons[playerGesture]} ${I18N.es.gestures[playerGesture]}`,
+        cpuLabel: `${ruleset.icons[cpuGesture]} ${I18N.es.gestures[cpuGesture]}`,
+        result,
+        time: formattedTime,
+        points
+      };
+      state.session.history.push(record);
+      state.session.roundsPlayed += 1;
+      state.session.lastResult = { result, player: playerGesture, cpu: cpuGesture };
+
+      ui.renderScoreboard();
+      ui.renderRound();
+      ui.renderHistory();
+      ui.renderAnalytics();
+      ui.renderProgress();
+      ui.renderAchievements();
+
+      storage.save({ prefs: state.prefs, stats: state.stats });
+
+      if (state.prefs.mode === "bestof") {
+        checkBestOfVictory();
+      }
+    }
+
+    /*
+      =============================================================
+      Gestión de los modos de juego Best Of y Contrarreloj.
+    */
+    function checkBestOfVictory() {
+      const target = state.session.bestOfTarget;
+      const needed = Math.ceil(target / 2);
+      if (state.session.wins >= needed) {
+        showToast("🏆 ¡Has ganado la serie!");
+        triggerConfetti();
+        resetSession();
+      } else if (state.session.losses >= needed) {
+        showToast("💥 La IA gana la serie");
+        resetSession();
+      }
+    }
+
+    function startTimer() {
+      clearInterval(state.session.timerInterval);
+      state.session.timerRemaining = state.prefs.timer * 1000;
+      state.session.timerActive = true;
+      state.session.timerInterval = setInterval(() => {
+        state.session.timerRemaining -= 1000;
+        if (state.session.timerRemaining <= 0) {
+          clearInterval(state.session.timerInterval);
+          state.session.timerRemaining = 0;
+          state.session.timerActive = false;
+          showToast("⌛ Tiempo finalizado");
+        }
+        ui.renderProgress();
+      }, 1000);
+      ui.renderProgress();
+    }
+
+    function stopTimer() {
+      clearInterval(state.session.timerInterval);
+      state.session.timerActive = false;
+      state.session.timerRemaining = 0;
+    }
+
+    /*
+      =============================================================
+      Reinicio de sesión según las preferencias actuales.
+    */
+    function resetSession() {
+      state.session.wins = 0;
+      state.session.losses = 0;
+      state.session.draws = 0;
+      state.session.streak = 0;
+      state.session.history = [];
+      state.session.roundsPlayed = 0;
+      state.session.lastResult = null;
+      state.session.powerUps.noDrawActive = false;
+      state.session.powerUps.doublePointsUntil = 0;
+      if (state.prefs.mode === "bestof") {
+        state.session.bestOfTarget = Number(state.prefs.bestOf);
+      }
+      if (state.prefs.mode === "timed") {
+        startTimer();
+      } else {
+        stopTimer();
+      }
+      ui.renderAll();
+    }
+
+    /*
+      =============================================================
+      Manejo de interacciones: clicks, teclado, modales.
+    */
+    function handleChoice(event) {
+      const target = event.target.closest(".choice-btn");
+      if (!target) return;
+      const gesture = target.dataset.gesture;
+      sound.click();
+      if (state.prefs.mode === "timed" && !state.session.timerActive) {
+        showToast("⌛ El temporizador ha terminado. Reinicia o cambia el modo.");
+        return;
+      }
+      resolveRound(gesture);
+    }
+
+    function handleKey(event) {
+      const keyMap = { q: "rock", w: "paper", e: "scissors" };
+      if (state.prefs.lizardSpock) {
+        keyMap.r = "lizard";
+        keyMap.t = "spock";
+      }
+      const gesture = keyMap[event.key.toLowerCase()];
+      if (gesture) {
+        event.preventDefault();
+        const button = ui.choices.querySelector(`[data-gesture="${gesture}"]`);
+        if (button) {
+          button.classList.add("active");
+          setTimeout(() => button.classList.remove("active"), 150);
+          resolveRound(gesture);
+        }
+      }
+    }
+
+    function toggleTheme() {
+      state.prefs.theme = state.prefs.theme === "dark" ? "light" : "dark";
+      document.body.classList.toggle("theme-dark", state.prefs.theme === "dark");
+      document.body.classList.toggle("theme-light", state.prefs.theme === "light");
+      ui.themeBtn.textContent = state.prefs.theme === "dark" ? "Tema 🌙" : "Tema ☀️";
+      storage.save({ prefs: state.prefs, stats: state.stats });
+    }
+
+    function openModal(id) {
+      document.getElementById(id).classList.add("active");
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).classList.remove("active");
+    }
+
+    function initFromPrefs() {
+      document.body.classList.toggle("theme-dark", state.prefs.theme === "dark");
+      document.body.classList.toggle("theme-light", state.prefs.theme === "light");
+      document.body.classList.toggle("animations-off", !state.prefs.animations);
+      ui.themeBtn.textContent = state.prefs.theme === "dark" ? "Tema 🌙" : "Tema ☀️";
+      sound.setEnabled(state.prefs.sounds);
+      if (state.prefs.mode === "timed") {
+        startTimer();
+      }
+    }
+
+    function handleSettingsChange() {
+      state.prefs.difficulty = ui.difficulty.value;
+      state.prefs.mode = ui.modeSelect.value;
+      state.prefs.bestOf = Number(ui.bestOf.value);
+      state.prefs.timer = Number(ui.timerSelect.value);
+      state.prefs.sounds = ui.soundToggle.checked;
+      state.prefs.animations = ui.animationToggle.checked;
+      state.prefs.lizardSpock = ui.lizardToggle.checked;
+      sound.setEnabled(state.prefs.sounds);
+      document.body.classList.toggle("animations-off", !state.prefs.animations);
+      storage.save({ prefs: state.prefs, stats: state.stats });
+      resetSession();
+      ui.renderSettings();
+      ui.renderRules();
+      showToast("Ajustes guardados");
+    }
+
+    function handleHistoryClear() {
+      state.session.history = [];
+      ui.renderHistory();
+    }
+
+    // Eventos de UI
+    ui.choices.addEventListener("click", handleChoice);
+    document.addEventListener("keydown", handleKey);
+    ui.themeBtn.addEventListener("click", toggleTheme);
+    ui.helpBtn.addEventListener("click", () => openModal("help-modal"));
+    ui.settingsBtn.addEventListener("click", () => openModal("settings-modal"));
+    document.querySelectorAll("[data-close]").forEach((btn) => {
+      btn.addEventListener("click", (event) => {
+        const id = event.currentTarget.getAttribute("data-close");
+        closeModal(id);
+      });
+    });
+    ui.settingsModal.addEventListener("click", (event) => {
+      if (event.target === ui.settingsModal) closeModal("settings-modal");
+    });
+    ui.helpModal.addEventListener("click", (event) => {
+      if (event.target === ui.helpModal) closeModal("help-modal");
+    });
+    ui.resetBtn.addEventListener("click", () => {
+      resetSession();
+      showToast("Partida reiniciada");
+    });
+    ui.clearHistoryBtn.addEventListener("click", handleHistoryClear);
+    ui.difficulty.addEventListener("change", handleSettingsChange);
+    ui.modeSelect.addEventListener("change", handleSettingsChange);
+    ui.bestOf.addEventListener("change", handleSettingsChange);
+    ui.timerSelect.addEventListener("change", handleSettingsChange);
+    ui.soundToggle.addEventListener("change", handleSettingsChange);
+    ui.animationToggle.addEventListener("change", handleSettingsChange);
+    ui.lizardToggle.addEventListener("change", handleSettingsChange);
+    ui.activateDouble.addEventListener("click", () => {
+      activateDoublePoints();
+    });
+    ui.activateNoDraw.addEventListener("click", () => {
+      activateNoDraw();
+    });
+
+    /*
+      =============================================================
+      Funciones de pruebas automáticas para validar la lógica principal.
+    */
+    function runTests() {
+      const assert = (cond, msg) => {
+        if (!cond) throw new Error(`Test falló: ${msg}`);
+      };
+      const gestures = RULESETS.RPS.gestures;
+      gestures.forEach((a) => {
+        gestures.forEach((b) => {
+          const res = determineWinner(a, b, false);
+          assert(["win", "lose", "draw"].includes(res), `Resultado inválido ${res}`);
+        });
+      });
+      const extendedGestures = RULESETS.RPSLS.gestures;
+      extendedGestures.forEach((a) => {
+        extendedGestures.forEach((b) => {
+          const res = determineWinner(a, b, true);
+          assert(["win", "lose", "draw"].includes(res), `Resultado inválido extendido ${res}`);
+        });
+      });
+      for (let i = 0; i < 20; i++) {
+        const g = ai.easy([], false);
+        assert(RULESETS.RPS.gestures.includes(g), "IA fácil fuera de rango");
+      }
+      for (let i = 0; i < 20; i++) {
+        const g = ai.hard([{ player: "rock" }], false);
+        assert(RULESETS.RPS.gestures.includes(g), "IA difícil fuera de rango");
+      }
+      const persisted = storage.save({ prefs: state.prefs, stats: state.stats });
+      assert(persisted === true, "Persistencia fallida");
+      console.info("✅ Pruebas completadas");
+    }
+
+    // Inicialización
+    initFromPrefs();
+    ui.renderAll();
+    runTests();
+  </script>
+</body>
+</html>
