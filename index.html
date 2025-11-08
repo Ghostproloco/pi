@@ -1,0 +1,2675 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Piedra, Papel, Tijera — Edición Ultimate</title>
+  <style>
+    /*
+      ==============================
+      Estilos base y diseño responsive
+      ==============================
+      - El layout se construye con un enfoque mobile-first.
+      - Los temas claro y oscuro se gestionan mediante variables CSS en :root
+        y la clase .theme-light / .theme-dark en <body>.
+      - Se incluyen animaciones suaves que respetan prefers-reduced-motion.
+    */
+
+    :root {
+      color-scheme: light dark;
+      --font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      --radius-md: 16px;
+      --radius-sm: 10px;
+      --shadow-soft: 0 20px 45px rgba(0, 0, 0, 0.15);
+      --transition-base: 200ms ease;
+      --transition-long: 350ms ease;
+      --border-width: 1px;
+      --max-width: 1100px;
+      --header-height: 72px;
+    }
+
+    body {
+      margin: 0;
+      font-family: var(--font-family);
+      background: var(--bg-gradient);
+      color: var(--text-color);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 24px 12px 72px;
+      transition: background var(--transition-long), color var(--transition-base);
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    body::before,
+    body::after {
+      content: "";
+      position: fixed;
+      inset: auto;
+      width: 480px;
+      height: 480px;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.55;
+      z-index: 0;
+      pointer-events: none;
+      transition: opacity var(--transition-long);
+    }
+
+    body::before {
+      top: -160px;
+      left: -120px;
+      background: radial-gradient(circle at center, rgba(59, 130, 246, 0.55), transparent 70%);
+    }
+
+    body::after {
+      bottom: -220px;
+      right: -160px;
+      background: radial-gradient(circle at center, rgba(244, 114, 182, 0.5), transparent 70%);
+    }
+
+    body.theme-dark {
+      --bg-gradient: radial-gradient(circle at top, #121926 0%, #05070c 60%, #020205 100%);
+      --surface-color: rgba(12, 18, 28, 0.85);
+      --surface-elevated: rgba(19, 26, 37, 0.9);
+      --text-color: #f8fafc;
+      --subtle-text: #cbd5f5;
+      --accent: #38bdf8;
+      --accent-muted: rgba(56, 189, 248, 0.15);
+      --danger: #f87171;
+      --success: #34d399;
+      --warning: #fbbf24;
+      --border-color: rgba(148, 163, 184, 0.25);
+      --shadow-toast: 0 12px 24px rgba(15, 23, 42, 0.6);
+    }
+
+    body.theme-light {
+      --bg-gradient: radial-gradient(circle at top, #f8fafc 0%, #e2e8f0 60%, #cbd5f5 100%);
+      --surface-color: rgba(255, 255, 255, 0.88);
+      --surface-elevated: rgba(255, 255, 255, 0.95);
+      --text-color: #111827;
+      --subtle-text: #475569;
+      --accent: #2563eb;
+      --accent-muted: rgba(37, 99, 235, 0.12);
+      --danger: #dc2626;
+      --success: #16a34a;
+      --warning: #d97706;
+      --border-color: rgba(148, 163, 184, 0.35);
+      --shadow-toast: 0 12px 24px rgba(148, 163, 184, 0.35);
+    }
+
+    .app-shell {
+      width: min(100%, var(--max-width));
+      background: var(--surface-color);
+      border-radius: 28px;
+      backdrop-filter: blur(16px);
+      box-shadow: var(--shadow-soft);
+      overflow: hidden;
+      border: var(--border-width) solid var(--border-color);
+      position: relative;
+      z-index: 2;
+      opacity: 0;
+      transform: translateY(24px) scale(0.98);
+      transition: opacity 400ms ease, transform 420ms ease, filter 280ms ease;
+      pointer-events: none;
+    }
+
+    body.is-loading .app-shell {
+      filter: blur(10px) saturate(1.1);
+      opacity: 0.35;
+    }
+
+    body.boot-complete .app-shell {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+      pointer-events: auto;
+      filter: none;
+    }
+
+    .loading-screen {
+      position: fixed;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      background: radial-gradient(circle at top, rgba(15, 23, 42, 0.95), rgba(2, 6, 23, 0.96));
+      z-index: 9;
+      color: #f8fafc;
+      transition: opacity 380ms ease;
+    }
+
+    .loading-screen.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .loading-content {
+      text-align: center;
+      display: grid;
+      gap: 22px;
+      max-width: 420px;
+      padding: 36px;
+      background: rgba(15, 23, 42, 0.65);
+      border-radius: 28px;
+      border: 1px solid rgba(148, 163, 184, 0.35);
+      box-shadow: 0 32px 60px rgba(2, 6, 23, 0.65);
+    }
+
+    .loading-logo {
+      font-size: 0.95rem;
+      letter-spacing: 0.4rem;
+      text-transform: uppercase;
+      color: #38bdf8;
+    }
+
+    .loading-title {
+      font-size: clamp(1.8rem, 4vw, 2.4rem);
+      margin: 0;
+      font-weight: 700;
+    }
+
+    .loading-tagline {
+      margin: 0;
+      color: rgba(226, 232, 240, 0.85);
+      min-height: 1.6em;
+    }
+
+    .loading-progress {
+      width: 100%;
+      height: 12px;
+      background: rgba(30, 41, 59, 0.8);
+      border-radius: 999px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .loading-progress span {
+      display: block;
+      height: 100%;
+      width: var(--loading-progress, 0%);
+      background: linear-gradient(90deg, #38bdf8, #a855f7);
+      transition: width 260ms ease;
+    }
+
+    .loading-progress-value {
+      font-size: 0.85rem;
+      color: rgba(226, 232, 240, 0.75);
+    }
+
+    .start-btn {
+      border-radius: 999px;
+      padding: 14px 28px;
+      font-size: 1rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #38bdf8, #6366f1);
+      color: #fff;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 16px 32px rgba(99, 102, 241, 0.35);
+      transition: transform 220ms ease, box-shadow 220ms ease, opacity 200ms ease;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .start-btn.ready {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .start-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 24px 46px rgba(99, 102, 241, 0.45);
+    }
+
+    .start-btn:active {
+      transform: translateY(0);
+    }
+
+    .title-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .title-stack .subtitle {
+      margin: 0;
+      font-size: 0.9rem;
+      color: var(--subtle-text);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .app-footer {
+      margin: 0;
+      padding: 22px;
+      text-align: center;
+      color: var(--subtle-text);
+      font-size: 0.85rem;
+    }
+
+    .app-footer span {
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 24px;
+      background: var(--surface-elevated);
+      border-bottom: var(--border-width) solid var(--border-color);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    header h1 {
+      font-size: clamp(1.4rem, 2.2vw, 2rem);
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    header h1 span {
+      font-size: 2rem;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    button,
+    .chip,
+    .toggle {
+      font: inherit;
+      border: none;
+      border-radius: var(--radius-sm);
+      padding: 10px 16px;
+      cursor: pointer;
+      transition: transform var(--transition-base), background var(--transition-base), box-shadow var(--transition-base);
+      background: var(--accent-muted);
+      color: var(--text-color);
+    }
+
+    button:focus-visible {
+      outline: 3px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    .ghost {
+      background: transparent;
+      border: var(--border-width) solid var(--border-color);
+    }
+
+    .primary {
+      background: linear-gradient(135deg, var(--accent), color-mix(in srgb, var(--accent) 70%, white 30%));
+      color: white;
+    }
+
+    .danger {
+      background: linear-gradient(135deg, var(--danger), color-mix(in srgb, var(--danger) 70%, white 30%));
+      color: white;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 22px rgba(0, 0, 0, 0.18);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    main {
+      padding: 24px;
+      display: grid;
+      gap: 24px;
+    }
+
+    .status-bar {
+      display: grid;
+      gap: 16px;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    }
+
+    .card {
+      background: var(--surface-elevated);
+      padding: 20px;
+      border-radius: var(--radius-md);
+      border: var(--border-width) solid var(--border-color);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card h2 {
+      margin-top: 0;
+      margin-bottom: 14px;
+      font-size: 1.1rem;
+    }
+
+    .scoreboard-grid {
+      display: grid;
+      gap: 12px;
+    }
+
+    .scoreboard-grid .metric {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px;
+      border-radius: var(--radius-sm);
+      background: color-mix(in srgb, var(--accent-muted) 60%, transparent 40%);
+    }
+
+    .scoreboard-grid .metric span:first-child {
+      font-weight: 600;
+      color: var(--subtle-text);
+    }
+
+    .scoreboard-sections {
+      display: grid;
+      gap: 16px;
+      width: 100%;
+    }
+
+    .scoreboard-section {
+      background: color-mix(in srgb, var(--surface-elevated) 75%, transparent 25%);
+      border-radius: var(--radius-sm);
+      border: var(--border-width) solid var(--border-color);
+      padding: 14px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .scoreboard-section h3 {
+      margin: 0;
+      font-size: 1rem;
+      color: var(--subtle-text);
+    }
+
+    .result-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      border-radius: 999px;
+      font-weight: 600;
+    }
+
+    .result-chip.win {
+      background: color-mix(in srgb, var(--success) 25%, transparent 75%);
+      color: var(--success);
+    }
+
+    .result-chip.lose {
+      background: color-mix(in srgb, var(--danger) 25%, transparent 75%);
+      color: var(--danger);
+    }
+
+    .result-chip.draw {
+      background: color-mix(in srgb, var(--warning) 25%, transparent 75%);
+      color: var(--warning);
+    }
+
+    .choices {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 18px;
+    }
+
+    .choice-btn {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      background: linear-gradient(145deg, color-mix(in srgb, var(--surface-elevated) 80%, white 20%), color-mix(in srgb, var(--surface-color) 80%, black 20%));
+      border: var(--border-width) solid var(--border-color);
+      box-shadow: inset 0 0 0 0 rgba(0, 0, 0, 0.2);
+    }
+
+    .choice-btn span.emoji {
+      font-size: 2.5rem;
+    }
+
+    .choice-btn:active {
+      transform: scale(0.97);
+      box-shadow: inset 0 0 18px rgba(0, 0, 0, 0.2);
+    }
+
+    .choice-btn[disabled] {
+      cursor: not-allowed;
+      opacity: 0.55;
+      transform: none;
+    }
+
+    .cooldown-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: color-mix(in srgb, var(--warning) 20%, transparent 80%);
+      color: var(--warning);
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+
+    .cooldown-badge.hidden {
+      display: none;
+    }
+
+    #cpu-choice-label.thinking::before {
+      content: "";
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      border: 2px solid color-mix(in srgb, var(--accent) 80%, white 20%);
+      border-top-color: transparent;
+      display: inline-block;
+      margin-right: 8px;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .coin-card {
+      display: grid;
+      gap: 18px;
+    }
+
+    .coin-area {
+      display: grid;
+      gap: 18px;
+      justify-items: center;
+    }
+
+    .coin-display {
+      display: grid;
+      gap: 12px;
+      justify-items: center;
+    }
+
+    .coin {
+      width: 120px;
+      height: 120px;
+      position: relative;
+      border-radius: 50%;
+      transform-style: preserve-3d;
+      transform: rotateY(var(--coin-rotation, 0deg));
+      animation-duration: var(--coin-duration, 1s);
+    }
+
+    .coin.spinning {
+      animation-name: coin-flip;
+      animation-duration: var(--coin-duration, 1s);
+      animation-fill-mode: forwards;
+      animation-timing-function: ease-in-out;
+    }
+
+    .coin-face {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      backface-visibility: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 1.4rem;
+      background: radial-gradient(circle at top, color-mix(in srgb, var(--accent) 60%, white 40%), color-mix(in srgb, var(--accent) 30%, black 20%));
+      border: var(--border-width) solid var(--border-color);
+      box-shadow: inset 0 6px 12px rgba(0, 0, 0, 0.35);
+      color: #fff;
+    }
+
+    .coin-face.coin-back {
+      transform: rotateY(180deg);
+      background: radial-gradient(circle at top, color-mix(in srgb, var(--warning) 60%, white 40%), color-mix(in srgb, var(--warning) 30%, black 20%));
+    }
+
+    .coin-status {
+      text-align: center;
+      font-weight: 600;
+    }
+
+    .coin-status.success {
+      color: var(--success);
+    }
+
+    .coin-status.fail {
+      color: var(--danger);
+    }
+
+    .coin-controls {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 12px;
+    }
+
+    .coin-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 18px;
+      border-radius: var(--radius-sm);
+      border: var(--border-width) solid var(--border-color);
+      background: color-mix(in srgb, var(--surface-elevated) 60%, transparent 40%);
+      font-weight: 600;
+    }
+
+    .coin-btn.active {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent 75%);
+    }
+
+    .coin-btn[disabled],
+    #coin-flip-btn[disabled] {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    @keyframes coin-flip {
+      from {
+        transform: rotateY(var(--coin-start, 0deg));
+      }
+      to {
+        transform: rotateY(var(--coin-end, 0deg));
+      }
+    }
+
+    @media (hover: hover) {
+      .choice-btn:hover {
+        border-color: var(--accent);
+        transform: translateY(-3px);
+      }
+    }
+
+    .round-panel {
+      display: grid;
+      gap: 14px;
+    }
+
+    .versus {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      background: color-mix(in srgb, var(--accent-muted) 60%, transparent 40%);
+      padding: 16px;
+      border-radius: var(--radius-sm);
+    }
+
+    .versus .side {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      align-items: center;
+      text-align: center;
+    }
+
+    .versus .side .avatar {
+      font-size: 2.4rem;
+    }
+
+    .history-list {
+      max-height: 220px;
+      overflow-y: auto;
+      display: grid;
+      gap: 10px;
+      padding-right: 6px;
+    }
+
+    .history-item {
+      display: grid;
+      grid-template-columns: 0.6fr 1fr 1fr 1fr 0.9fr 0.9fr;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 12px;
+      border-radius: var(--radius-sm);
+      background: color-mix(in srgb, var(--surface-color) 80%, black 20%);
+      font-size: 0.9rem;
+    }
+
+    .history-item.win {
+      border-left: 4px solid var(--success);
+    }
+
+    .history-item.lose {
+      border-left: 4px solid var(--danger);
+    }
+
+    .history-item.draw {
+      border-left: 4px solid var(--warning);
+    }
+
+    .progress-wrapper {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 12px;
+      background: color-mix(in srgb, var(--accent-muted) 30%, transparent 70%);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .progress-bar span {
+      display: block;
+      height: 100%;
+      background: var(--accent);
+      width: 0%;
+      transition: width var(--transition-long);
+    }
+
+    .toast-container {
+      position: fixed;
+      top: 24px;
+      right: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      z-index: 999;
+    }
+
+    .toast {
+      padding: 12px 18px;
+      border-radius: var(--radius-sm);
+      background: var(--surface-elevated);
+      box-shadow: var(--shadow-toast);
+      border: var(--border-width) solid var(--border-color);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      animation: fade-in var(--transition-long);
+    }
+
+    .toast.fade-out {
+      opacity: 0;
+      transform: translateY(-10px);
+      transition: opacity var(--transition-base), transform var(--transition-base);
+    }
+
+    @keyframes fade-in {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(10, 14, 23, 0.6);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      z-index: 900;
+    }
+
+    .modal-backdrop.active {
+      display: flex;
+    }
+
+    .modal {
+      width: min(100%, 640px);
+      max-height: 90vh;
+      overflow-y: auto;
+      background: var(--surface-elevated);
+      border-radius: var(--radius-md);
+      padding: 24px;
+      border: var(--border-width) solid var(--border-color);
+      box-shadow: var(--shadow-soft);
+      display: grid;
+      gap: 18px;
+    }
+
+    .modal h2 {
+      margin: 0;
+    }
+
+    .form-group {
+      display: grid;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    label {
+      font-weight: 600;
+    }
+
+    select,
+    input[type="number"],
+    input[type="range"],
+    .toggle {
+      border-radius: var(--radius-sm);
+      border: var(--border-width) solid var(--border-color);
+      background: color-mix(in srgb, var(--surface-color) 80%, transparent 20%);
+      padding: 10px 12px;
+      color: var(--text-color);
+    }
+
+    .toggle {
+      display: inline-flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .toggle input {
+      accent-color: var(--accent);
+    }
+
+    .achievements {
+      display: grid;
+      gap: 12px;
+    }
+
+    .achievement {
+      padding: 12px;
+      border-radius: var(--radius-sm);
+      border: var(--border-width) solid var(--border-color);
+      background: color-mix(in srgb, var(--surface-color) 90%, transparent 10%);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .achievement.unlocked {
+      border-color: var(--success);
+      background: color-mix(in srgb, var(--success) 15%, transparent 85%);
+    }
+
+    .analytics {
+      display: grid;
+      gap: 12px;
+    }
+
+    .bar-chart {
+      display: grid;
+      gap: 10px;
+    }
+
+    .bar {
+      height: 12px;
+      background: var(--accent-muted);
+      border-radius: 999px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .bar span {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, var(--accent), color-mix(in srgb, var(--accent) 50%, white 50%));
+      width: 0%;
+      transition: width var(--transition-long);
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    .confetti {
+      position: fixed;
+      pointer-events: none;
+      inset: 0;
+      overflow: hidden;
+      z-index: 800;
+    }
+
+    .confetti span {
+      position: absolute;
+      width: 10px;
+      height: 18px;
+      background: var(--accent);
+      animation: fall 1.6s linear forwards;
+      will-change: transform;
+    }
+
+    @keyframes fall {
+      to {
+        transform: translate3d(var(--x-move), 100vh, 0) rotate(360deg);
+        opacity: 0;
+      }
+    }
+
+    @media (min-width: 720px) {
+      .scoreboard-sections {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (min-width: 960px) {
+      main {
+        grid-template-columns: 2fr 1fr;
+        grid-template-rows: auto auto;
+      }
+      .choices-card {
+        grid-column: 1 / 2;
+      }
+      .round-card {
+        grid-column: 1 / 2;
+        grid-row: 2 / 3;
+      }
+      .history-card {
+        grid-column: 2 / 3;
+        grid-row: 1 / 3;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * {
+        animation-duration: 1ms !important;
+        transition-duration: 1ms !important;
+      }
+    }
+
+    body.animations-off * {
+      transition: none !important;
+      animation: none !important;
+    }
+  </style>
+</head>
+<body class="theme-dark is-loading">
+  <div class="loading-screen" id="loading-screen" role="dialog" aria-modal="true" aria-labelledby="loading-title">
+    <div class="loading-content">
+      <div class="loading-logo">SurgeRaps Studios</div>
+      <h2 class="loading-title" id="loading-title">Ultimate Arcade Launcher</h2>
+      <p class="loading-tagline" id="loading-tagline">Cargando graficazos…</p>
+      <div class="loading-progress" aria-hidden="true">
+        <span id="loading-progress"></span>
+      </div>
+      <div class="loading-progress-value" id="loading-progress-value">0%</div>
+      <button type="button" class="start-btn" id="start-btn" aria-label="Comenzar la partida">Entrar al menú principal</button>
+    </div>
+  </div>
+  <div class="confetti" aria-hidden="true"></div>
+  <div class="toast-container" aria-live="polite" aria-atomic="true"></div>
+  <div class="app-shell" role="application">
+    <header>
+      <div class="title-stack">
+        <h1><span>🎮</span><span id="title-label">Piedra, Papel, Tijera — Ultimate</span></h1>
+        <p class="subtitle" id="studio-credit">Hecho por <strong>SurgeRaps Studios</strong></p>
+      </div>
+      <div class="header-actions">
+        <div class="chip" id="mode-label">Modo: Infinito</div>
+        <button type="button" class="ghost" id="help-btn" aria-haspopup="dialog">Ayuda</button>
+        <button type="button" class="ghost" id="settings-btn" aria-haspopup="dialog">Ajustes</button>
+        <button type="button" class="ghost" id="theme-btn" aria-pressed="false">Tema 🌙</button>
+      </div>
+    </header>
+    <main>
+      <section class="card status-card" aria-label="Marcador y estado">
+        <h2>Marcador</h2>
+        <div class="status-bar">
+          <div class="scoreboard-sections">
+            <div class="scoreboard-section" aria-label="Estadísticas de Piedra, Papel o Tijera">
+              <h3>Piedra · Papel · Tijera</h3>
+              <div class="scoreboard-grid">
+                <div class="metric"><span>Victorias</span><span id="wins">0</span></div>
+                <div class="metric"><span>Empates</span><span id="draws">0</span></div>
+                <div class="metric"><span>Derrotas</span><span id="losses">0</span></div>
+                <div class="metric"><span>Racha</span><span id="streak">0</span></div>
+                <div class="metric"><span>Multiplicador</span><span id="multiplier">x1</span></div>
+              </div>
+            </div>
+            <div class="scoreboard-section" aria-label="Estadísticas de FlipCoin">
+              <h3>FlipCoin</h3>
+              <div class="scoreboard-grid">
+                <div class="metric"><span>Lanzamientos</span><span id="coin-flips">0</span></div>
+                <div class="metric"><span>Aciertos</span><span id="coin-hits">0</span></div>
+                <div class="metric"><span>Fallos</span><span id="coin-misses">0</span></div>
+                <div class="metric"><span>Racha</span><span id="coin-streak">0</span></div>
+                <div class="metric"><span>Mejor racha</span><span id="coin-best">0</span></div>
+                <div class="metric"><span>Precisión</span><span id="coin-accuracy">0%</span></div>
+              </div>
+            </div>
+          </div>
+          <div class="progress-wrapper">
+            <div id="last-result" class="result-chip draw" aria-live="polite">🤝 Preparado para jugar</div>
+            <div class="progress-info">
+              <strong id="progress-label">Modo Infinito</strong>
+              <div class="subtle" id="progress-sub">Juega tantas rondas como quieras.</div>
+            </div>
+            <div class="progress-bar" aria-hidden="true">
+              <span id="progress-bar"></span>
+            </div>
+            <button type="button" class="ghost" id="reset-btn">Reiniciar partida</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="card choices-card" aria-label="Selecciona tu jugada">
+        <h2>Elige tu jugada</h2>
+        <p class="subtle">Puedes usar los botones o las teclas Q (Piedra), W (Papel), E (Tijera).</p>
+        <div id="cooldown-badge" class="cooldown-badge hidden" role="status" aria-live="polite">
+          ⏳ Cooldown: <span id="cooldown-value">5</span>s
+        </div>
+        <div id="choices" class="choices" role="group" aria-label="Opciones de jugada"></div>
+      </section>
+
+      <section class="card round-card" aria-label="Resultado de la ronda">
+        <h2>Resultado</h2>
+        <div class="round-panel">
+          <div class="versus" id="versus-panel" aria-live="polite">
+            <div class="side" id="player-side">
+              <div class="avatar" aria-hidden="true">🧑</div>
+              <div id="player-choice-label">Esperando…</div>
+            </div>
+            <div class="side">
+              <div class="avatar" aria-hidden="true">⚡</div>
+              <div>VS</div>
+            </div>
+            <div class="side" id="cpu-side">
+              <div class="avatar" aria-hidden="true">🤖</div>
+              <div id="cpu-choice-label">Listo para jugar</div>
+            </div>
+          </div>
+          <div id="round-message" class="result-chip draw">🎲 ¡Haz tu movimiento!</div>
+        </div>
+      </section>
+
+      <section class="card coin-card" aria-label="Modo FlipCoin">
+        <h2>FlipCoin</h2>
+        <p class="subtle">Selecciona Cara o Cruz, lanza la moneda y trata de acertar.</p>
+        <div class="coin-area">
+          <div class="coin-display" aria-live="polite">
+            <div class="coin" id="coin" role="img" aria-label="Moneda animada">
+              <div class="coin-face coin-front">Cara</div>
+              <div class="coin-face coin-back">Cruz</div>
+            </div>
+            <div id="coin-status" class="coin-status">Elige Cara o Cruz para empezar</div>
+          </div>
+          <div class="coin-controls" role="group" aria-label="Controles de FlipCoin">
+            <button type="button" class="coin-btn" data-coin="heads">🪙 Cara</button>
+            <button type="button" class="coin-btn" data-coin="tails">🎯 Cruz</button>
+            <button type="button" class="primary" id="coin-flip-btn">Lanzar</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="card history-card" aria-label="Historial de rondas">
+        <h2>Historial reciente</h2>
+        <div class="history-list" id="history-list" aria-live="polite"></div>
+        <button type="button" class="ghost" id="clear-history">Limpiar historial</button>
+      </section>
+
+      <section class="card analytics-card" aria-label="Estadísticas por gesto">
+        <h2>Estadísticas globales</h2>
+        <div class="analytics">
+          <div class="metric"><span>Total de partidas</span><span id="total-games">0</span></div>
+          <div class="metric"><span>Mayor racha</span><span id="best-streak">0</span></div>
+          <div class="metric"><span>Victorias %</span><span id="win-rate">0%</span></div>
+          <div>
+            <h3>Rendimiento por gesto</h3>
+            <div class="bar-chart" id="gesture-chart"></div>
+          </div>
+          <div>
+            <h3>Precisión FlipCoin</h3>
+            <div class="bar-chart" id="coin-chart"></div>
+          </div>
+        </div>
+      </section>
+    </main>
+    <footer class="app-footer" aria-label="Créditos del juego">
+      Hecho con ❤️ por <span>SurgeRaps Studios</span> · Experimenta el arcade definitivo desde tu navegador
+    </footer>
+  </div>
+
+  <!-- Modal de Ajustes -->
+  <div class="modal-backdrop" id="settings-modal" role="dialog" aria-modal="true" aria-labelledby="settings-title">
+    <div class="modal">
+      <header>
+        <h2 id="settings-title">Ajustes</h2>
+        <button type="button" class="ghost" data-close="settings-modal">Cerrar</button>
+      </header>
+      <div class="form-group">
+        <label for="difficulty-select">Dificultad de la IA</label>
+        <select id="difficulty-select">
+          <option value="easy">Fácil</option>
+          <option value="normal">Normal</option>
+          <option value="hard">Difícil</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="mode-select">Modo de juego</label>
+        <select id="mode-select">
+          <option value="infinite">Infinito</option>
+          <option value="bestof">Mejor de N</option>
+          <option value="timed">Contrarreloj</option>
+        </select>
+      </div>
+      <div class="form-group" id="bestof-group">
+        <label for="bestof-select">Selecciona N</label>
+        <select id="bestof-select">
+          <option value="3">3</option>
+          <option value="5">5</option>
+          <option value="7">7</option>
+        </select>
+      </div>
+      <div class="form-group hidden" id="timer-group">
+        <label for="timer-select">Duración (segundos)</label>
+        <select id="timer-select">
+          <option value="30">30</option>
+          <option value="60">60</option>
+          <option value="120">120</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="coin-speed-select">Velocidad de la moneda (FlipCoin)</label>
+        <select id="coin-speed-select">
+          <option value="slow">Lenta (1.5 s)</option>
+          <option value="normal">Normal (1 s)</option>
+          <option value="fast">Rápida (0.8 s)</option>
+        </select>
+      </div>
+      <div class="form-group toggle">
+        <span>Sonidos</span>
+        <label><input type="checkbox" id="sound-toggle" checked /> Activados</label>
+      </div>
+      <div class="form-group toggle">
+        <span>Animaciones</span>
+        <label><input type="checkbox" id="animation-toggle" checked /> Activadas</label>
+      </div>
+      <div class="form-group toggle">
+        <span>Modo Lagarto-Spock</span>
+        <label><input type="checkbox" id="lizard-toggle" /> Activado</label>
+      </div>
+      <div class="form-group">
+        <button type="button" class="primary" id="activate-double">Activar Doble Puntos (30s)</button>
+        <button type="button" class="ghost" id="activate-nodraw">Bloquear Empates (1 ronda)</button>
+      </div>
+      <div class="form-group">
+        <button type="button" class="ghost" id="run-tests-btn">Ejecutar pruebas automáticas</button>
+        <p class="subtle">Solo se ejecutan bajo demanda y pueden tardar unos segundos.</p>
+      </div>
+      <div class="achievements">
+        <h3>Logros</h3>
+        <div class="achievement" data-achievement="warmup"><span>🔥 Calentando</span><span class="status">Bloqueado</span></div>
+        <div class="achievement" data-achievement="unstoppable"><span>🚀 Imparable</span><span class="status">Bloqueado</span></div>
+        <div class="achievement" data-achievement="strategist"><span>🧠 Estratega</span><span class="status">Bloqueado</span></div>
+        <div class="achievement" data-achievement="marathon"><span>🏃‍♂️ Maratón</span><span class="status">Bloqueado</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Ayuda -->
+  <div class="modal-backdrop" id="help-modal" role="dialog" aria-modal="true" aria-labelledby="help-title">
+    <div class="modal">
+      <header>
+        <h2 id="help-title">Ayuda &amp; Reglas</h2>
+        <button type="button" class="ghost" data-close="help-modal">Cerrar</button>
+      </header>
+      <div class="help-content">
+        <p>Elige tu gesto para enfrentarte a la IA. Puedes usar los botones o las teclas Q, W, E (y R/T si activas Lagarto-Spock). Cambia el modo y la dificultad desde Ajustes en cualquier momento.</p>
+        <p>Tras elegir un gesto la IA piensa durante 1 segundo antes de revelar su jugada y, al terminar la ronda, se aplica un cooldown visible de 5 segundos que bloquea nuevos intentos (se mostrarán toasts si intentas adelantar el turno).</p>
+        <h3>Qué gana a qué</h3>
+        <ul id="rules-list"></ul>
+        <h3>Atajos</h3>
+        <ul id="shortcuts-list"></ul>
+        <h3>FlipCoin</h3>
+        <p>Selecciona Cara o Cruz, lanza la moneda y espera a que termine la animación 3D (1–1.5 s). Durante la animación los controles quedan bloqueados para evitar spam. Puedes ajustar la velocidad en Ajustes y usar los atajos A (Cara), D (Cruz) y Enter (Lanzar).</p>
+        <p>Logros disponibles: Calentando (1ª victoria), Imparable (racha 5), Estratega (ganar en difícil), Maratón (50 rondas en un día).</p>
+        <p>Créditos: Hecho con cariño por el equipo creativo de SurgeRaps Studios.</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    "use strict";
+    /*
+      =============================================================
+      i18n básico: estructura preparada para permitir traducir
+      etiquetas clave en el futuro. Se usa 'es' por defecto.
+    */
+    const I18N = {
+      es: {
+        modes: {
+          infinite: "Infinito",
+          bestof: "Mejor de N",
+          timed: "Contrarreloj"
+        },
+        results: {
+          win: "Ganas",
+          lose: "Pierdes",
+          draw: "Empate"
+        },
+        games: {
+          ppt: "PPT",
+          coin: "FlipCoin"
+        },
+        coin: {
+          heads: "Cara",
+          tails: "Cruz"
+        },
+        coinOutcome: {
+          win: "Acierto",
+          lose: "Fallo"
+        },
+        gestures: {
+          rock: "Piedra",
+          paper: "Papel",
+          scissors: "Tijera",
+          lizard: "Lagarto",
+          spock: "Spock"
+        }
+      }
+    };
+
+    /*
+      =============================================================
+      Definición de reglas y lógica pura para calcular resultados.
+      La función determineWinner siempre devuelve "win", "lose" o "draw".
+    */
+    const RULESETS = {
+      RPS: {
+        gestures: ["rock", "paper", "scissors"],
+        matrix: {
+          rock: { rock: "draw", paper: "lose", scissors: "win" },
+          paper: { rock: "win", paper: "draw", scissors: "lose" },
+          scissors: { rock: "lose", paper: "win", scissors: "draw" }
+        },
+        relationships: [
+          "Piedra aplasta a Tijera",
+          "Papel envuelve a Piedra",
+          "Tijera corta Papel"
+        ],
+        icons: {
+          rock: "🪨",
+          paper: "📄",
+          scissors: "✂️"
+        }
+      },
+      RPSLS: {
+        gestures: ["rock", "paper", "scissors", "lizard", "spock"],
+        matrix: {
+          rock: { rock: "draw", paper: "lose", scissors: "win", lizard: "win", spock: "lose" },
+          paper: { rock: "win", paper: "draw", scissors: "lose", lizard: "lose", spock: "win" },
+          scissors: { rock: "lose", paper: "win", scissors: "draw", lizard: "win", spock: "lose" },
+          lizard: { rock: "lose", paper: "win", scissors: "lose", lizard: "draw", spock: "win" },
+          spock: { rock: "win", paper: "lose", scissors: "win", lizard: "lose", spock: "draw" }
+        },
+        relationships: [
+          "Tijeras cortan Papel",
+          "Papel cubre Piedra",
+          "Piedra aplasta Lagarto",
+          "Lagarto envenena Spock",
+          "Spock rompe Tijeras",
+          "Tijeras decapitan Lagarto",
+          "Lagarto come Papel",
+          "Papel desautoriza Spock",
+          "Spock vaporiza Piedra",
+          "Piedra rompe Tijeras"
+        ],
+        icons: {
+          rock: "🪨",
+          paper: "📄",
+          scissors: "✂️",
+          lizard: "🦎",
+          spock: "🖖"
+        }
+      }
+    };
+
+    const COIN_ICONS = {
+      heads: "🪙",
+      tails: "🎯"
+    };
+
+    const COIN_SPEED_MS = {
+      slow: 1500,
+      normal: 1000,
+      fast: 800
+    };
+
+    /**
+     * Determina el resultado comparando los gestos del jugador y la IA.
+     * @param {string} player - Gesto del jugador
+     * @param {string} cpu - Gesto del ordenador
+     * @param {boolean} useExtended - true si está activo Lagarto-Spock
+     * @returns {"win"|"lose"|"draw"}
+     */
+    function determineWinner(player, cpu, useExtended = false) {
+      const ruleset = useExtended ? RULESETS.RPSLS : RULESETS.RPS;
+      const playerRules = ruleset.matrix[player];
+      if (!playerRules) return "draw";
+      return playerRules[cpu] ?? "draw";
+    }
+
+    /*
+      =============================================================
+      Persistencia ligera con localStorage. Se encapsula en try/catch
+      para evitar errores si el almacenamiento no está disponible.
+    */
+    const storage = (() => {
+      const KEY = "ppt-ultimate-state";
+      const load = () => {
+        try {
+          const raw = localStorage.getItem(KEY);
+          if (!raw) return null;
+          return JSON.parse(raw);
+        } catch (err) {
+          console.warn("No se pudo cargar el estado", err);
+          return null;
+        }
+      };
+      const save = (data) => {
+        try {
+          localStorage.setItem(KEY, JSON.stringify(data));
+          return true;
+        } catch (err) {
+          console.warn("No se pudo guardar el estado", err);
+          return false;
+        }
+      };
+      return { load, save };
+    })();
+
+    /*
+      =============================================================
+      Gestor de sonidos mediante Web Audio API. Se crean tres osciladores
+      simples para click, victoria y derrota.
+    */
+    const sound = (() => {
+      let ctx;
+      let enabled = true;
+      const ensureContext = () => {
+        if (!ctx) {
+          ctx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+      };
+      const playTone = (frequency, duration = 0.15) => {
+        if (!enabled) return;
+        try {
+          ensureContext();
+          const oscillator = ctx.createOscillator();
+          const gain = ctx.createGain();
+          oscillator.type = "sine";
+          oscillator.frequency.value = frequency;
+          gain.gain.setValueAtTime(0.001, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.15, ctx.currentTime + 0.02);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+          oscillator.connect(gain).connect(ctx.destination);
+          oscillator.start();
+          oscillator.stop(ctx.currentTime + duration);
+        } catch (err) {
+          console.warn("No se pudo reproducir sonido", err);
+        }
+      };
+      return {
+        setEnabled(value) {
+          enabled = value;
+        },
+        click() {
+          playTone(440, 0.08);
+        },
+        win() {
+          playTone(880, 0.2);
+        },
+        lose() {
+          playTone(220, 0.25);
+        },
+        coin() {
+          playTone(600, 0.25);
+        }
+      };
+    })();
+
+    /*
+      =============================================================
+      Generadores de decisiones para la IA en los tres niveles de dificultad.
+      - easy: totalmente aleatorio.
+      - normal: 70% aleatorio, 30% intenta contrarrestar el último gesto del jugador.
+      - hard: analiza las últimas 5 elecciones del jugador y contraataca la más frecuente.
+    */
+    const ai = (() => {
+      const getRandomGesture = (gestures) => gestures[Math.floor(Math.random() * gestures.length)];
+
+      const counterFor = (gesture, useExtended) => {
+        const ruleset = useExtended ? RULESETS.RPSLS : RULESETS.RPS;
+        const outcomes = ruleset.matrix;
+        const counters = Object.entries(outcomes).filter(([g]) => outcomes[g][gesture] === "win");
+        if (!counters.length) return getRandomGesture(ruleset.gestures);
+        return counters[Math.floor(Math.random() * counters.length)][0];
+      };
+
+      const easy = (history, useExtended) => {
+        const ruleset = useExtended ? RULESETS.RPSLS : RULESETS.RPS;
+        return getRandomGesture(ruleset.gestures);
+      };
+
+      const normal = (history, useExtended) => {
+        const ruleset = useExtended ? RULESETS.RPSLS : RULESETS.RPS;
+        if (!history.length || Math.random() < 0.7) {
+          return getRandomGesture(ruleset.gestures);
+        }
+        const lastPlayer = history[history.length - 1].player;
+        return counterFor(lastPlayer, useExtended);
+      };
+
+      const hard = (history, useExtended) => {
+        const ruleset = useExtended ? RULESETS.RPSLS : RULESETS.RPS;
+        if (history.length < 2) {
+          return getRandomGesture(ruleset.gestures);
+        }
+        const recent = history.slice(-5);
+        const counts = {};
+        recent.forEach((round) => {
+          counts[round.player] = (counts[round.player] || 0) + 1;
+        });
+        const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+        const predicted = sorted[0][0];
+        if (Math.random() < 0.65) {
+          return counterFor(predicted, useExtended);
+        }
+        return getRandomGesture(ruleset.gestures);
+      };
+
+      return { easy, normal, hard };
+    })();
+
+    /*
+      =============================================================
+      Estado central del juego: preferencias persistentes, estadísticas
+      globales y datos de la sesión actual.
+    */
+    const defaultState = () => ({
+      prefs: {
+        theme: "dark",
+        difficulty: "normal",
+        mode: "infinite",
+        bestOf: 3,
+        timer: 60,
+        sounds: true,
+        animations: true,
+        lizardSpock: false,
+        coinSpeed: "normal"
+      },
+      stats: {
+        totalGames: 0,
+        wins: 0,
+        losses: 0,
+        draws: 0,
+        bestStreak: 0,
+        gesturePerformance: {
+          rock: { wins: 0, plays: 0 },
+          paper: { wins: 0, plays: 0 },
+          scissors: { wins: 0, plays: 0 },
+          lizard: { wins: 0, plays: 0 },
+          spock: { wins: 0, plays: 0 }
+        },
+        coin: {
+          flips: 0,
+          hits: 0,
+          misses: 0,
+          streak: 0,
+          bestStreak: 0
+        },
+        achievements: {
+          warmup: false,
+          unstoppable: false,
+          strategist: false,
+          marathon: false
+        },
+        lastPlayed: null,
+        dailyRounds: 0
+      },
+      session: {
+        wins: 0,
+        losses: 0,
+        draws: 0,
+        streak: 0,
+        history: [],
+        historyCounter: 0,
+        lastResult: null,
+        startTime: Date.now(),
+        timerActive: false,
+        timerRemaining: 0,
+        timerInterval: null,
+        bestOfTarget: 3,
+        roundsPlayed: 0,
+        powerUps: {
+          doublePointsUntil: 0,
+          noDrawActive: false
+        },
+        roundLock: false,
+        cooldownActive: false,
+        cooldownEndsAt: 0,
+        cooldownInterval: null,
+        cooldownRemaining: 0,
+        thinking: false,
+        thinkingTimeout: null,
+        pendingPlayer: null,
+        bootComplete: false,
+        coin: {
+          choice: null,
+          locked: false,
+          rotation: 0
+        }
+      }
+    });
+
+    const state = (() => {
+      const base = defaultState();
+      const saved = storage.load();
+      if (saved) {
+        if (saved.prefs) {
+          base.prefs = { ...base.prefs, ...saved.prefs };
+        }
+        if (saved.stats) {
+          base.stats = {
+            ...base.stats,
+            ...saved.stats,
+            achievements: { ...base.stats.achievements, ...(saved.stats.achievements || {}) },
+            gesturePerformance: { ...base.stats.gesturePerformance, ...(saved.stats.gesturePerformance || {}) }
+          };
+          base.stats.coin = { ...base.stats.coin, ...(saved.stats.coin || {}) };
+        }
+      }
+      return base;
+    })();
+
+    /*
+      =============================================================
+      Utilidades varias.
+    */
+    const utils = {
+      formatMode(state) {
+        const modeLabel = I18N.es.modes[state.prefs.mode];
+        if (state.prefs.mode === "bestof") {
+          return `${modeLabel} (${state.session.wins + state.session.losses + state.session.draws}/${state.session.bestOfTarget})`;
+        }
+        if (state.prefs.mode === "timed") {
+          const seconds = Math.max(0, Math.round(state.session.timerRemaining / 1000));
+          return `${modeLabel} (${seconds}s)`;
+        }
+        return modeLabel;
+      },
+      getRuleset() {
+        return state.prefs.lizardSpock ? RULESETS.RPSLS : RULESETS.RPS;
+      },
+      now() {
+        return Date.now();
+      },
+      clamp(value, min, max) {
+        return Math.min(Math.max(value, min), max);
+      }
+    };
+
+    /*
+      =============================================================
+      Gestión de UI: renderizado reactivo básico que actualiza el DOM
+      tras cambios en el estado. Se agrupan referencias a elementos.
+    */
+    const ui = (() => {
+      const dom = {
+        modeLabel: document.getElementById("mode-label"),
+        wins: document.getElementById("wins"),
+        draws: document.getElementById("draws"),
+        losses: document.getElementById("losses"),
+        streak: document.getElementById("streak"),
+        multiplier: document.getElementById("multiplier"),
+        coinFlips: document.getElementById("coin-flips"),
+        coinHits: document.getElementById("coin-hits"),
+        coinMisses: document.getElementById("coin-misses"),
+        coinStreak: document.getElementById("coin-streak"),
+        coinBest: document.getElementById("coin-best"),
+        coinAccuracy: document.getElementById("coin-accuracy"),
+        lastResult: document.getElementById("last-result"),
+        progressLabel: document.getElementById("progress-label"),
+        progressSub: document.getElementById("progress-sub"),
+        progressBar: document.getElementById("progress-bar"),
+        resetBtn: document.getElementById("reset-btn"),
+        choices: document.getElementById("choices"),
+        cooldownBadge: document.getElementById("cooldown-badge"),
+        cooldownValue: document.getElementById("cooldown-value"),
+        playerChoice: document.getElementById("player-choice-label"),
+        cpuChoice: document.getElementById("cpu-choice-label"),
+        roundMessage: document.getElementById("round-message"),
+        historyList: document.getElementById("history-list"),
+        clearHistory: document.getElementById("clear-history"),
+        totalGames: document.getElementById("total-games"),
+        bestStreak: document.getElementById("best-streak"),
+        winRate: document.getElementById("win-rate"),
+        gestureChart: document.getElementById("gesture-chart"),
+        coinChart: document.getElementById("coin-chart"),
+        settingsModal: document.getElementById("settings-modal"),
+        helpModal: document.getElementById("help-modal"),
+        difficulty: document.getElementById("difficulty-select"),
+        modeSelect: document.getElementById("mode-select"),
+        bestOfGroup: document.getElementById("bestof-group"),
+        bestOf: document.getElementById("bestof-select"),
+        timerGroup: document.getElementById("timer-group"),
+        timerSelect: document.getElementById("timer-select"),
+        coinSpeed: document.getElementById("coin-speed-select"),
+        soundToggle: document.getElementById("sound-toggle"),
+        animationToggle: document.getElementById("animation-toggle"),
+        lizardToggle: document.getElementById("lizard-toggle"),
+        activateDouble: document.getElementById("activate-double"),
+        activateNoDraw: document.getElementById("activate-nodraw"),
+        runTestsBtn: document.getElementById("run-tests-btn"),
+        achievementEls: Array.from(document.querySelectorAll(".achievement")),
+        rulesList: document.getElementById("rules-list"),
+        shortcutsList: document.getElementById("shortcuts-list"),
+        themeBtn: document.getElementById("theme-btn"),
+        helpBtn: document.getElementById("help-btn"),
+        settingsBtn: document.getElementById("settings-btn"),
+        confetti: document.querySelector(".confetti"),
+        toastContainer: document.querySelector(".toast-container"),
+        clearHistoryBtn: document.getElementById("clear-history"),
+        coinElement: document.getElementById("coin"),
+        coinStatus: document.getElementById("coin-status"),
+        coinFlipBtn: document.getElementById("coin-flip-btn"),
+        coinButtons: Array.from(document.querySelectorAll(".coin-btn")),
+        loadingScreen: document.getElementById("loading-screen"),
+        loadingProgress: document.getElementById("loading-progress"),
+        loadingValue: document.getElementById("loading-progress-value"),
+        startButton: document.getElementById("start-btn"),
+        loadingTagline: document.getElementById("loading-tagline")
+      };
+
+      /**
+       * Renderiza los botones de gestos según el modo actual (RPS o RPSLS).
+       */
+      const renderChoices = () => {
+        const ruleset = utils.getRuleset();
+        dom.choices.innerHTML = "";
+        ruleset.gestures.forEach((gesture) => {
+          const button = document.createElement("button");
+          button.className = "choice-btn";
+          button.dataset.gesture = gesture;
+          button.innerHTML = `<span class="emoji">${ruleset.icons[gesture]}</span><span>${I18N.es.gestures[gesture]}</span>`;
+          button.setAttribute("aria-label", I18N.es.gestures[gesture]);
+          button.disabled =
+            !state.session.bootComplete ||
+            state.session.roundLock ||
+            (state.prefs.mode === "timed" && !state.session.timerActive);
+          dom.choices.appendChild(button);
+        });
+      };
+
+      const updateChoiceAvailability = () => {
+        dom.choices.querySelectorAll("button").forEach((button) => {
+          button.disabled =
+            !state.session.bootComplete ||
+            state.session.roundLock ||
+            (state.prefs.mode === "timed" && !state.session.timerActive);
+        });
+      };
+
+      /**
+       * Actualiza la sección del marcador.
+       */
+      const renderScoreboard = () => {
+        dom.wins.textContent = state.session.wins;
+        dom.draws.textContent = state.session.draws;
+        dom.losses.textContent = state.session.losses;
+        dom.streak.textContent = state.session.streak;
+        const streakMultiplier = state.session.streak >= 3 ? 2 : 1;
+        const activeMultiplier = isDoublePointsActive() ? streakMultiplier * 2 : streakMultiplier;
+        dom.multiplier.textContent = `x${activeMultiplier}`;
+        dom.modeLabel.textContent = `Modo: ${utils.formatMode(state)}`;
+        const coinStats = state.stats.coin;
+        dom.coinFlips.textContent = coinStats.flips;
+        dom.coinHits.textContent = coinStats.hits;
+        dom.coinMisses.textContent = coinStats.misses;
+        dom.coinStreak.textContent = coinStats.streak;
+        dom.coinBest.textContent = coinStats.bestStreak;
+        const accuracy = coinStats.flips ? Math.round((coinStats.hits / coinStats.flips) * 100) : 0;
+        dom.coinAccuracy.textContent = `${accuracy}%`;
+      };
+
+      /**
+       * Actualiza el panel de progreso según el modo activo.
+       */
+      const renderProgress = () => {
+        if (!state.session.bootComplete) {
+          dom.progressLabel.textContent = "Menú bloqueado";
+          dom.progressSub.textContent = "Pulsa «Entrar al menú principal» para comenzar.";
+          dom.progressBar.style.width = "0%";
+          return;
+        }
+        dom.progressLabel.textContent = utils.formatMode(state);
+        let subtitle = "";
+        if (state.prefs.mode === "infinite") {
+          subtitle = "Juega tantas rondas como quieras.";
+          dom.progressBar.style.width = "0%";
+        } else if (state.prefs.mode === "bestof") {
+          subtitle = `Rondas jugadas: ${state.session.roundsPlayed}/${state.session.bestOfTarget}`;
+          const totalNeeded = state.session.bestOfTarget;
+          dom.progressBar.style.width = `${(state.session.roundsPlayed / totalNeeded) * 100}%`;
+        } else if (state.prefs.mode === "timed") {
+          subtitle = `Tiempo restante: ${Math.max(0, Math.round(state.session.timerRemaining / 1000))}s`;
+          const total = state.prefs.timer * 1000;
+          const remaining = utils.clamp(state.session.timerRemaining, 0, total);
+          dom.progressBar.style.width = `${(remaining / total) * 100}%`;
+        }
+        const statuses = [];
+        if (isDoublePointsActive()) statuses.push("⚡ Doble puntos activo");
+        if (state.session.powerUps.noDrawActive) statuses.push("🛡️ Bloqueo de empates listo");
+        if (statuses.length) {
+          subtitle += subtitle ? ` · ${statuses.join(" · ")}` : statuses.join(" · ");
+        }
+        dom.progressSub.textContent = subtitle;
+      };
+
+      /**
+       * Presenta el resultado de la última ronda con estilos y emojis.
+       */
+      const renderRound = () => {
+        const ruleset = utils.getRuleset();
+        if (!state.session.bootComplete) {
+          dom.cpuChoice.classList.remove("thinking");
+          dom.roundMessage.textContent = "🎬 Pulsa «Entrar al menú principal» para iniciar la partida";
+          dom.roundMessage.className = "result-chip draw";
+          dom.playerChoice.textContent = "Esperando inicio";
+          dom.cpuChoice.textContent = "Menú inicial";
+          dom.lastResult.textContent = "⌛ Preparando experiencia";
+          dom.lastResult.className = "result-chip draw";
+          return;
+        }
+        if (state.session.thinking) {
+          if (state.session.pendingPlayer) {
+            dom.playerChoice.textContent = `${ruleset.icons[state.session.pendingPlayer]} ${I18N.es.gestures[state.session.pendingPlayer]}`;
+          } else {
+            dom.playerChoice.textContent = "Esperando…";
+          }
+          dom.cpuChoice.textContent = "Pensando…";
+          dom.cpuChoice.classList.add("thinking");
+          dom.roundMessage.textContent = "⌛ La IA está pensando…";
+          dom.roundMessage.className = "result-chip draw";
+          dom.lastResult.textContent = "⌛ Esperando resultado";
+          dom.lastResult.className = "result-chip draw";
+          return;
+        }
+        dom.cpuChoice.classList.remove("thinking");
+        if (!state.session.lastResult) {
+          dom.roundMessage.textContent = "🎲 ¡Haz tu movimiento!";
+          dom.roundMessage.className = "result-chip draw";
+          dom.playerChoice.textContent = "Esperando…";
+          dom.cpuChoice.textContent = "Listo para jugar";
+          return;
+        }
+        const { result, player, cpu } = state.session.lastResult;
+        const label = I18N.es.results[result];
+        const emoji = result === "win" ? "🏆" : result === "lose" ? "💥" : "🤝";
+        dom.roundMessage.textContent = `${emoji} ${label}`;
+        dom.roundMessage.className = `result-chip ${result}`;
+        dom.playerChoice.textContent = `${ruleset.icons[player]} ${I18N.es.gestures[player]}`;
+        dom.cpuChoice.textContent = `${ruleset.icons[cpu]} ${I18N.es.gestures[cpu]}`;
+        dom.lastResult.textContent = `${emoji} ${label}`;
+        dom.lastResult.className = `result-chip ${result}`;
+      };
+
+      /**
+       * Rellena la lista de historial con las últimas 10 rondas.
+       */
+      const renderHistory = () => {
+        dom.historyList.innerHTML = "";
+        state.session.history.slice(-10).reverse().forEach((round) => {
+          const row = document.createElement("div");
+          row.className = `history-item ${round.result}`;
+          row.innerHTML = `
+            <span>#${round.number}</span>
+            <span>${round.gameLabel}</span>
+            <span>${round.playerLabel}</span>
+            <span>${round.cpuLabel}</span>
+            <span>${round.outcomeLabel || I18N.es.results[round.result]}</span>
+            <span>${round.time}</span>
+          `;
+          dom.historyList.appendChild(row);
+        });
+      };
+
+      /**
+       * Actualiza métricas globales y gráfico por gesto.
+       */
+      const renderAnalytics = () => {
+        const { stats } = state;
+        dom.totalGames.textContent = stats.totalGames;
+        dom.bestStreak.textContent = stats.bestStreak;
+        const winRate = stats.totalGames ? Math.round((stats.wins / stats.totalGames) * 100) : 0;
+        dom.winRate.textContent = `${winRate}%`;
+        dom.gestureChart.innerHTML = "";
+        const gestures = utils.getRuleset().gestures;
+        gestures.forEach((gesture) => {
+          const perf = stats.gesturePerformance[gesture];
+          if (!perf) return;
+          const rate = perf.plays ? Math.round((perf.wins / perf.plays) * 100) : 0;
+          const item = document.createElement("div");
+          item.innerHTML = `<strong>${I18N.es.gestures[gesture]}</strong> (${perf.wins}/${perf.plays})`;
+          const bar = document.createElement("div");
+          bar.className = "bar";
+          const fill = document.createElement("span");
+          fill.style.width = `${rate}%`;
+          bar.appendChild(fill);
+          dom.gestureChart.appendChild(item);
+          dom.gestureChart.appendChild(bar);
+        });
+        dom.coinChart.innerHTML = "";
+        const accuracy = stats.coin.flips ? Math.round((stats.coin.hits / stats.coin.flips) * 100) : 0;
+        const coinItem = document.createElement("div");
+        coinItem.innerHTML = `<strong>Precisión</strong> (${stats.coin.hits}/${stats.coin.flips})`;
+        const coinBar = document.createElement("div");
+        coinBar.className = "bar";
+        const coinFill = document.createElement("span");
+        coinFill.style.width = `${accuracy}%`;
+        coinBar.appendChild(coinFill);
+        dom.coinChart.appendChild(coinItem);
+        dom.coinChart.appendChild(coinBar);
+      };
+
+      /**
+       * Muestra/oculta campos en Ajustes según modo.
+       */
+      const renderSettings = () => {
+        dom.difficulty.value = state.prefs.difficulty;
+        dom.modeSelect.value = state.prefs.mode;
+        dom.bestOf.value = state.prefs.bestOf;
+        dom.timerSelect.value = state.prefs.timer;
+        dom.coinSpeed.value = state.prefs.coinSpeed;
+        dom.soundToggle.checked = state.prefs.sounds;
+        dom.animationToggle.checked = state.prefs.animations;
+        dom.lizardToggle.checked = state.prefs.lizardSpock;
+        dom.bestOfGroup.classList.toggle("hidden", state.prefs.mode !== "bestof");
+        dom.timerGroup.classList.toggle("hidden", state.prefs.mode !== "timed");
+      };
+
+      /**
+       * Muestra las reglas en el modal de ayuda.
+       */
+      const renderRules = () => {
+        const ruleset = utils.getRuleset();
+        dom.rulesList.innerHTML = "";
+        ruleset.relationships.forEach((rule) => {
+          const li = document.createElement("li");
+          li.textContent = rule;
+          dom.rulesList.appendChild(li);
+        });
+      };
+
+      /**
+       * Actualiza la lista de atajos de teclado según los gestos disponibles.
+       */
+      const renderShortcuts = () => {
+        const base = [
+          { key: "Q", gesture: "rock" },
+          { key: "W", gesture: "paper" },
+          { key: "E", gesture: "scissors" }
+        ];
+        const extended = state.prefs.lizardSpock
+          ? [
+              ...base,
+              { key: "R", gesture: "lizard" },
+              { key: "T", gesture: "spock" }
+            ]
+          : base;
+        dom.shortcutsList.innerHTML = "";
+        extended.forEach((item) => {
+          const li = document.createElement("li");
+          li.innerHTML = `<strong>${item.key}</strong> — ${I18N.es.gestures[item.gesture]}`;
+          dom.shortcutsList.appendChild(li);
+        });
+        const extras = [
+          { key: "A", label: `FlipCoin · ${I18N.es.coin.heads}` },
+          { key: "D", label: `FlipCoin · ${I18N.es.coin.tails}` },
+          { key: "Enter", label: "Lanzar moneda" }
+        ];
+        extras.forEach((item) => {
+          const li = document.createElement("li");
+          li.innerHTML = `<strong>${item.key}</strong> — ${item.label}`;
+          dom.shortcutsList.appendChild(li);
+        });
+      };
+
+      /**
+       * Refresca estado de logros en Ajustes.
+       */
+      const renderAchievements = () => {
+        dom.achievementEls.forEach((el) => {
+          const id = el.dataset.achievement;
+          const unlocked = state.stats.achievements[id];
+          el.classList.toggle("unlocked", unlocked);
+          el.querySelector(".status").textContent = unlocked ? "Desbloqueado" : "Bloqueado";
+        });
+      };
+
+      const renderAll = () => {
+        renderScoreboard();
+        renderProgress();
+        renderRound();
+        renderHistory();
+        renderAnalytics();
+        renderSettings();
+        renderRules();
+        renderAchievements();
+        renderChoices();
+        renderShortcuts();
+        updateChoiceAvailability();
+      };
+
+      return { ...dom, renderAll, renderChoices, renderProgress, renderRound, renderScoreboard, renderHistory, renderAnalytics, renderSettings, renderRules, renderAchievements, renderShortcuts, updateChoiceAvailability };
+    })();
+
+    let bootReady = false;
+    let bootProgressTimer = null;
+    let bootMessageTimer = null;
+
+    /*
+      =============================================================
+      Sistema de toasts para notificaciones cortas.
+    */
+    function showToast(message) {
+      const toast = document.createElement("div");
+      toast.className = "toast";
+      toast.textContent = message;
+      ui.toastContainer.appendChild(toast);
+      setTimeout(() => {
+        toast.classList.add("fade-out");
+        const remove = () => toast.remove();
+        toast.addEventListener("transitionend", remove, { once: true });
+        setTimeout(remove, 600);
+      }, 2400);
+    }
+
+    function startBootSequence() {
+      if (state.session.bootComplete) return;
+      if (!ui.loadingScreen) {
+        state.session.bootComplete = true;
+        document.body.classList.remove("is-loading");
+        document.body.classList.add("boot-complete");
+        bootReady = true;
+        return;
+      }
+      const messages = [
+        "Potenciando el menú principal…",
+        "Afinando la IA estratégica…",
+        "Cargando graficazos y partículas…",
+        "Sincronizando logros y rachas…",
+        "Calibrando el modo FlipCoin…"
+      ];
+      let messageIndex = 0;
+      const rotateMessage = () => {
+        if (!ui.loadingTagline) return;
+        ui.loadingTagline.textContent = messages[messageIndex % messages.length];
+        messageIndex += 1;
+      };
+      rotateMessage();
+      bootMessageTimer = setInterval(rotateMessage, 1600);
+
+      let progress = 0;
+      const updateProgress = () => {
+        progress = Math.min(100, progress + Math.random() * 18 + 7);
+        if (ui.loadingProgress) {
+          ui.loadingProgress.style.setProperty("--loading-progress", `${progress}%`);
+        }
+        if (ui.loadingValue) {
+          ui.loadingValue.textContent = `${Math.round(progress)}%`;
+        }
+        if (progress >= 100) {
+          if (bootProgressTimer) {
+            clearInterval(bootProgressTimer);
+            bootProgressTimer = null;
+          }
+          bootReady = true;
+          if (bootMessageTimer) {
+            clearInterval(bootMessageTimer);
+            bootMessageTimer = null;
+          }
+          if (ui.loadingTagline) {
+            ui.loadingTagline.textContent = "Hecho por SurgeRaps Studios — ¡Listo para jugar!";
+          }
+          if (ui.startButton) {
+            ui.startButton.classList.add("ready");
+            ui.startButton.focus();
+          }
+        }
+      };
+      updateProgress();
+      bootProgressTimer = setInterval(updateProgress, 340);
+      setTimeout(() => {
+        progress = 100;
+        updateProgress();
+      }, 2600);
+    }
+
+    function completeBoot() {
+      if (state.session.bootComplete || !bootReady) {
+        return;
+      }
+      if (bootProgressTimer) {
+        clearInterval(bootProgressTimer);
+        bootProgressTimer = null;
+      }
+      if (bootMessageTimer) {
+        clearInterval(bootMessageTimer);
+        bootMessageTimer = null;
+      }
+      state.session.bootComplete = true;
+      document.body.classList.remove("is-loading");
+      document.body.classList.add("boot-complete");
+      if (ui.loadingScreen) {
+        ui.loadingScreen.classList.add("hidden");
+        setTimeout(() => ui.loadingScreen.remove(), 600);
+      }
+      if (ui.startButton) {
+        ui.startButton.setAttribute("disabled", "true");
+      }
+      ui.renderAll();
+      ui.updateChoiceAvailability();
+      setTimeout(() => showToast("✨ Bienvenido a la Ultimate Edition"), 420);
+    }
+
+    /*
+      =============================================================
+      Confeti sencillo mediante elementos <span> animados.
+    */
+    function triggerConfetti() {
+      if (!state.prefs.animations || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        return;
+      }
+      const count = 40;
+      for (let i = 0; i < count; i++) {
+        const piece = document.createElement("span");
+        piece.style.left = `${Math.random() * 100}%`;
+        piece.style.background = `hsl(${Math.random() * 360}, 80%, 60%)`;
+        piece.style.setProperty("--x-move", `${(Math.random() - 0.5) * 200}px`);
+        ui.confetti.appendChild(piece);
+        setTimeout(() => piece.remove(), 1600);
+      }
+    }
+
+    /*
+      =============================================================
+      Actualización de estadísticas y logros globales.
+    */
+    function updateStats(result, playerGesture) {
+      state.stats.totalGames += 1;
+      if (result === "win") state.stats.wins += 1;
+      if (result === "lose") state.stats.losses += 1;
+      if (result === "draw") state.stats.draws += 1;
+      state.stats.bestStreak = Math.max(state.stats.bestStreak, state.session.streak);
+      const gesturePerf = state.stats.gesturePerformance[playerGesture];
+      if (gesturePerf) {
+        gesturePerf.plays += 1;
+        if (result === "win") gesturePerf.wins += 1;
+      }
+      const today = new Date().toDateString();
+      if (state.stats.lastPlayed !== today) {
+        state.stats.lastPlayed = today;
+        state.stats.dailyRounds = 1;
+      } else {
+        state.stats.dailyRounds = (state.stats.dailyRounds || 0) + 1;
+      }
+      if (!state.stats.achievements.warmup && state.stats.wins >= 1) {
+        state.stats.achievements.warmup = true;
+        showToast("🔥 Logro desbloqueado: Calentando");
+      }
+      if (result === "win" && state.session.streak >= 5) {
+        if (!state.stats.achievements.unstoppable) {
+          state.stats.achievements.unstoppable = true;
+          showToast("🚀 Logro desbloqueado: Imparable");
+        }
+        triggerConfetti();
+      }
+      if (!state.stats.achievements.strategist && state.prefs.difficulty === "hard" && result === "win") {
+        state.stats.achievements.strategist = true;
+        showToast("🧠 Logro desbloqueado: Estratega");
+      }
+      if (!state.stats.achievements.marathon && state.stats.dailyRounds >= 50) {
+        state.stats.achievements.marathon = true;
+        showToast("🏃‍♂️ Logro desbloqueado: Maratón");
+      }
+    }
+
+    /*
+      =============================================================
+      Gestión de power-ups.
+    */
+    function activateDoublePoints() {
+      state.session.powerUps.doublePointsUntil = utils.now() + 30000;
+      showToast("⚡ Doble puntos activado por 30 segundos");
+      ui.renderScoreboard();
+      ui.renderProgress();
+      const remaining = Math.max(0, state.session.powerUps.doublePointsUntil - utils.now());
+      setTimeout(() => {
+        ui.renderScoreboard();
+        ui.renderProgress();
+      }, remaining + 120);
+    }
+
+    function activateNoDraw() {
+      state.session.powerUps.noDrawActive = true;
+      showToast("🛡️ Bloqueo de empates activo por 1 ronda");
+      ui.renderProgress();
+    }
+
+    function isDoublePointsActive() {
+      return utils.now() < state.session.powerUps.doublePointsUntil;
+    }
+
+    function startCooldown(duration = 5000) {
+      clearInterval(state.session.cooldownInterval);
+      state.session.cooldownActive = true;
+      state.session.cooldownEndsAt = utils.now() + duration;
+      state.session.cooldownRemaining = Math.ceil(duration / 1000);
+      state.session.roundLock = true;
+      ui.cooldownBadge.classList.remove("hidden");
+      ui.cooldownValue.textContent = state.session.cooldownRemaining;
+      ui.updateChoiceAvailability();
+      const tick = () => {
+        const remainingMs = state.session.cooldownEndsAt - utils.now();
+        const seconds = Math.max(0, Math.ceil(remainingMs / 1000));
+        state.session.cooldownRemaining = seconds;
+        ui.cooldownValue.textContent = seconds;
+        if (seconds <= 0) {
+          clearInterval(state.session.cooldownInterval);
+          state.session.cooldownInterval = null;
+          state.session.cooldownActive = false;
+          state.session.roundLock = false;
+          ui.cooldownBadge.classList.add("hidden");
+          ui.updateChoiceAvailability();
+        }
+      };
+      tick();
+      state.session.cooldownInterval = setInterval(tick, 1000);
+    }
+
+    function stopCooldown() {
+      clearInterval(state.session.cooldownInterval);
+      state.session.cooldownInterval = null;
+      state.session.cooldownActive = false;
+      state.session.cooldownEndsAt = 0;
+      state.session.cooldownRemaining = 0;
+      state.session.roundLock = false;
+      ui.cooldownBadge.classList.add("hidden");
+      ui.updateChoiceAvailability();
+    }
+
+    function queueRound(playerGesture) {
+      if (!state.session.bootComplete) {
+        return;
+      }
+      if (state.session.roundLock) {
+        if (state.session.cooldownActive) {
+          const remainingMs = Math.max(0, state.session.cooldownEndsAt - utils.now());
+          const seconds = Math.max(1, Math.ceil(remainingMs / 1000));
+          showToast(`⏳ Espera ${seconds}s`);
+        } else if (state.session.thinking) {
+          showToast("🤖 La IA está pensando…");
+        }
+        return;
+      }
+      if (state.prefs.mode === "timed" && !state.session.timerActive) {
+        showToast("⌛ El temporizador ha terminado. Reinicia o cambia el modo.");
+        return;
+      }
+      sound.click();
+      state.session.roundLock = true;
+      state.session.thinking = true;
+      state.session.pendingPlayer = playerGesture;
+      clearTimeout(state.session.thinkingTimeout);
+      ui.updateChoiceAvailability();
+      ui.renderRound();
+      state.session.thinkingTimeout = setTimeout(() => {
+        resolveRound(playerGesture);
+      }, 1000);
+    }
+
+    function flipCoinRandom() {
+      return Math.random() < 0.5 ? "heads" : "tails";
+    }
+
+    function selectCoinChoice(choice) {
+      if (!state.session.bootComplete) return;
+      if (state.session.coin.locked) return;
+      state.session.coin.choice = choice;
+      ui.coinButtons.forEach((btn) => {
+        btn.classList.toggle("active", btn.dataset.coin === choice);
+      });
+      ui.coinStatus.classList.remove("success", "fail");
+      ui.coinStatus.textContent = `Seleccionado: ${COIN_ICONS[choice]} ${I18N.es.coin[choice]}`;
+    }
+
+    function flipCoin() {
+      if (!state.session.bootComplete) {
+        return;
+      }
+      if (state.session.coin.locked) {
+        showToast("🪙 Espera a que termine la animación");
+        return;
+      }
+      if (!state.session.coin.choice) {
+        showToast("Selecciona Cara o Cruz antes de lanzar");
+        return;
+      }
+      const prefersReduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      const baseDuration = COIN_SPEED_MS[state.prefs.coinSpeed] || COIN_SPEED_MS.normal;
+      const duration = !state.prefs.animations || prefersReduced ? 0 : baseDuration;
+      const result = flipCoinRandom();
+      const startRotation = state.session.coin.rotation || 0;
+      const endRotation = result === "heads" ? 0 : 180;
+      state.session.coin.locked = true;
+      ui.coinButtons.forEach((btn) => {
+        btn.disabled = true;
+      });
+      ui.coinFlipBtn.disabled = true;
+      ui.coinStatus.classList.remove("success", "fail");
+      ui.coinStatus.textContent = "🌀 Lanzando…";
+      if (duration > 0) {
+        ui.coinElement.classList.remove("spinning");
+        void ui.coinElement.offsetWidth;
+        ui.coinElement.style.setProperty("--coin-start", `${startRotation}deg`);
+        ui.coinElement.style.setProperty("--coin-end", `${startRotation + 720 + (result === "heads" ? 0 : 180)}deg`);
+        ui.coinElement.style.setProperty("--coin-duration", `${duration / 1000}s`);
+        ui.coinElement.classList.add("spinning");
+      } else {
+        ui.coinElement.style.setProperty("--coin-rotation", `${endRotation}deg`);
+      }
+      const finalize = () => {
+        ui.coinElement.classList.remove("spinning");
+        ui.coinElement.style.setProperty("--coin-rotation", `${endRotation}deg`);
+        state.session.coin.rotation = endRotation;
+        state.session.coin.locked = false;
+        ui.coinButtons.forEach((btn) => {
+          btn.disabled = false;
+          btn.classList.toggle("active", btn.dataset.coin === state.session.coin.choice);
+        });
+        ui.coinFlipBtn.disabled = false;
+        const isHit = result === state.session.coin.choice;
+        if (isHit) {
+          state.stats.coin.hits += 1;
+          state.stats.coin.streak += 1;
+          ui.coinStatus.classList.add("success");
+          ui.coinStatus.textContent = `✅ ${I18N.es.coinOutcome.win}: ${COIN_ICONS[result]} ${I18N.es.coin[result]} · Tú: ${COIN_ICONS[state.session.coin.choice]} ${I18N.es.coin[state.session.coin.choice]}`;
+        } else {
+          state.stats.coin.misses += 1;
+          state.stats.coin.streak = 0;
+          ui.coinStatus.classList.add("fail");
+          ui.coinStatus.textContent = `❌ ${I18N.es.coinOutcome.lose}: ${COIN_ICONS[result]} ${I18N.es.coin[result]} · Tú: ${COIN_ICONS[state.session.coin.choice]} ${I18N.es.coin[state.session.coin.choice]}`;
+        }
+        state.stats.coin.flips += 1;
+        state.stats.coin.bestStreak = Math.max(state.stats.coin.bestStreak, state.stats.coin.streak);
+        sound.coin();
+        const record = {
+          type: "coin",
+          number: ++state.session.historyCounter,
+          player: state.session.coin.choice,
+          cpu: result,
+          playerLabel: `${COIN_ICONS[state.session.coin.choice]} ${I18N.es.coin[state.session.coin.choice]}`,
+          cpuLabel: `${COIN_ICONS[result]} ${I18N.es.coin[result]}`,
+          gameLabel: I18N.es.games.coin,
+          result: isHit ? "win" : "lose",
+          outcomeLabel: I18N.es.coinOutcome[isHit ? "win" : "lose"],
+          time: new Date().toLocaleTimeString()
+        };
+        state.session.history.push(record);
+        if (state.session.history.length > 60) {
+          state.session.history.splice(0, state.session.history.length - 60);
+        }
+        ui.renderScoreboard();
+        ui.renderHistory();
+        ui.renderAnalytics();
+        storage.save({ prefs: state.prefs, stats: state.stats });
+      };
+      if (duration > 0) {
+        setTimeout(finalize, duration);
+      } else {
+        finalize();
+      }
+    }
+
+    function resolveRound(playerGesture) {
+      const ruleset = utils.getRuleset();
+      const history = state.session.history.filter((entry) => entry.type === "ppt");
+      const difficulty = state.prefs.difficulty;
+      const useExtended = state.prefs.lizardSpock;
+      let cpuGesture;
+      if (difficulty === "easy") cpuGesture = ai.easy(history, useExtended);
+      else if (difficulty === "hard") cpuGesture = ai.hard(history, useExtended);
+      else cpuGesture = ai.normal(history, useExtended);
+
+      // Si el power-up de bloqueo de empates está activo, reintentar hasta que no haya empate.
+      if (state.session.powerUps.noDrawActive) {
+        let attempts = 0;
+        while (determineWinner(playerGesture, cpuGesture, useExtended) === "draw" && attempts < 5) {
+          cpuGesture = ai.easy(history, useExtended);
+          attempts++;
+        }
+        state.session.powerUps.noDrawActive = false;
+      }
+
+      const result = determineWinner(playerGesture, cpuGesture, useExtended);
+      const now = new Date();
+      const formattedTime = now.toLocaleTimeString();
+      let points = 1;
+      if (result === "win") {
+        state.session.wins += 1;
+        state.session.streak += 1;
+        if (state.session.streak >= 3) {
+          points += 1; // bonus por racha
+        }
+        if (isDoublePointsActive()) {
+          points *= 2;
+        }
+        sound.win();
+      } else if (result === "lose") {
+        state.session.losses += 1;
+        state.session.streak = 0;
+        sound.lose();
+      } else {
+        state.session.draws += 1;
+      }
+
+      updateStats(result, playerGesture);
+
+      const number = ++state.session.historyCounter;
+      const record = {
+        type: "ppt",
+        number,
+        player: playerGesture,
+        cpu: cpuGesture,
+        playerLabel: `${ruleset.icons[playerGesture]} ${I18N.es.gestures[playerGesture]}`,
+        cpuLabel: `${ruleset.icons[cpuGesture]} ${I18N.es.gestures[cpuGesture]}`,
+        gameLabel: I18N.es.games.ppt,
+        result,
+        outcomeLabel: I18N.es.results[result],
+        time: formattedTime,
+        points
+      };
+      state.session.history.push(record);
+      if (state.session.history.length > 60) {
+        state.session.history.splice(0, state.session.history.length - 60);
+      }
+      state.session.roundsPlayed += 1;
+      state.session.lastResult = { result, player: playerGesture, cpu: cpuGesture };
+      state.session.pendingPlayer = null;
+      state.session.thinking = false;
+
+      ui.renderScoreboard();
+      ui.renderRound();
+      ui.renderHistory();
+      ui.renderAnalytics();
+      ui.renderProgress();
+      ui.renderAchievements();
+      ui.updateChoiceAvailability();
+
+      storage.save({ prefs: state.prefs, stats: state.stats });
+
+      startCooldown();
+
+      if (state.prefs.mode === "bestof") {
+        checkBestOfVictory();
+      }
+    }
+
+    /*
+      =============================================================
+      Gestión de los modos de juego Best Of y Contrarreloj.
+    */
+    function checkBestOfVictory() {
+      const target = state.session.bestOfTarget;
+      const needed = Math.ceil(target / 2);
+      if (state.session.wins >= needed) {
+        showToast("🏆 ¡Has ganado la serie!");
+        triggerConfetti();
+        resetSession();
+      } else if (state.session.losses >= needed) {
+        showToast("💥 La IA gana la serie");
+        resetSession();
+      }
+    }
+
+    function startTimer() {
+      clearInterval(state.session.timerInterval);
+      state.session.timerRemaining = state.prefs.timer * 1000;
+      state.session.timerActive = true;
+      state.session.timerInterval = setInterval(() => {
+        state.session.timerRemaining -= 1000;
+        if (state.session.timerRemaining <= 0) {
+          clearInterval(state.session.timerInterval);
+          state.session.timerRemaining = 0;
+          state.session.timerActive = false;
+          showToast("⌛ Tiempo finalizado");
+        }
+        ui.renderProgress();
+      }, 1000);
+      ui.renderProgress();
+    }
+
+    function stopTimer() {
+      clearInterval(state.session.timerInterval);
+      state.session.timerActive = false;
+      state.session.timerRemaining = 0;
+    }
+
+    /*
+      =============================================================
+      Reinicio de sesión según las preferencias actuales.
+    */
+    function resetSession() {
+      state.session.wins = 0;
+      state.session.losses = 0;
+      state.session.draws = 0;
+      state.session.streak = 0;
+      state.session.roundsPlayed = 0;
+      state.session.lastResult = null;
+      state.session.powerUps.noDrawActive = false;
+      state.session.powerUps.doublePointsUntil = 0;
+      state.session.pendingPlayer = null;
+      state.session.thinking = false;
+      clearTimeout(state.session.thinkingTimeout);
+      state.session.thinkingTimeout = null;
+      stopCooldown();
+      state.session.coin.locked = false;
+      state.session.coin.choice = null;
+      ui.coinButtons.forEach((btn) => {
+        btn.disabled = false;
+        btn.classList.remove("active");
+      });
+      ui.coinFlipBtn.disabled = false;
+      ui.coinStatus.classList.remove("success", "fail");
+      ui.coinStatus.textContent = "Elige Cara o Cruz para empezar";
+      if (state.prefs.mode === "bestof") {
+        state.session.bestOfTarget = Number(state.prefs.bestOf);
+      }
+      if (state.prefs.mode === "timed") {
+        startTimer();
+      } else {
+        stopTimer();
+      }
+      ui.cooldownBadge.classList.add("hidden");
+      ui.renderAll();
+    }
+
+    /*
+      =============================================================
+      Manejo de interacciones: clicks, teclado, modales.
+    */
+    function handleChoice(event) {
+      if (!state.session.bootComplete) return;
+      const target = event.target.closest(".choice-btn");
+      if (!target) return;
+      const gesture = target.dataset.gesture;
+      queueRound(gesture);
+    }
+
+    function handleKey(event) {
+      if (!state.session.bootComplete) {
+        if ((event.key === "Enter" || event.key === " ") && bootReady && ui.startButton) {
+          event.preventDefault();
+          if (!ui.startButton.classList.contains("ready")) return;
+          ui.startButton.classList.add("active");
+          setTimeout(() => ui.startButton.classList.remove("active"), 180);
+          ui.startButton.click();
+        }
+        return;
+      }
+      const activeTag = document.activeElement && document.activeElement.tagName;
+      if (activeTag && ["INPUT", "SELECT", "TEXTAREA"].includes(activeTag)) {
+        return;
+      }
+      const keyMap = { q: "rock", w: "paper", e: "scissors" };
+      if (state.prefs.lizardSpock) {
+        keyMap.r = "lizard";
+        keyMap.t = "spock";
+      }
+      const gesture = keyMap[event.key.toLowerCase()];
+      if (gesture) {
+        event.preventDefault();
+        const button = ui.choices.querySelector(`[data-gesture="${gesture}"]`);
+        if (button) {
+          button.classList.add("active");
+          setTimeout(() => button.classList.remove("active"), 150);
+          queueRound(gesture);
+        }
+        return;
+      }
+      if (event.key.toLowerCase() === "a") {
+        event.preventDefault();
+        selectCoinChoice("heads");
+        sound.click();
+        return;
+      }
+      if (event.key.toLowerCase() === "d") {
+        event.preventDefault();
+        selectCoinChoice("tails");
+        sound.click();
+        return;
+      }
+      if (event.key === "Enter") {
+        if (state.session.coin.choice) {
+          event.preventDefault();
+          flipCoin();
+        }
+      }
+    }
+
+    function toggleTheme() {
+      state.prefs.theme = state.prefs.theme === "dark" ? "light" : "dark";
+      document.body.classList.toggle("theme-dark", state.prefs.theme === "dark");
+      document.body.classList.toggle("theme-light", state.prefs.theme === "light");
+      ui.themeBtn.textContent = state.prefs.theme === "dark" ? "Tema 🌙" : "Tema ☀️";
+      storage.save({ prefs: state.prefs, stats: state.stats });
+    }
+
+    function openModal(id) {
+      document.getElementById(id).classList.add("active");
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).classList.remove("active");
+    }
+
+    function initFromPrefs() {
+      document.body.classList.toggle("theme-dark", state.prefs.theme === "dark");
+      document.body.classList.toggle("theme-light", state.prefs.theme === "light");
+      document.body.classList.toggle("animations-off", !state.prefs.animations);
+      ui.themeBtn.textContent = state.prefs.theme === "dark" ? "Tema 🌙" : "Tema ☀️";
+      sound.setEnabled(state.prefs.sounds);
+      if (state.prefs.mode === "timed") {
+        startTimer();
+      }
+    }
+
+    function handleSettingsChange() {
+      state.prefs.difficulty = ui.difficulty.value;
+      state.prefs.mode = ui.modeSelect.value;
+      state.prefs.bestOf = Number(ui.bestOf.value);
+      state.prefs.timer = Number(ui.timerSelect.value);
+      state.prefs.sounds = ui.soundToggle.checked;
+      state.prefs.animations = ui.animationToggle.checked;
+      state.prefs.lizardSpock = ui.lizardToggle.checked;
+      state.prefs.coinSpeed = ui.coinSpeed.value;
+      sound.setEnabled(state.prefs.sounds);
+      document.body.classList.toggle("animations-off", !state.prefs.animations);
+      storage.save({ prefs: state.prefs, stats: state.stats });
+      resetSession();
+      ui.renderSettings();
+      ui.renderRules();
+      showToast("Ajustes guardados");
+    }
+
+    function handleHistoryClear() {
+      state.session.history = [];
+      state.session.historyCounter = 0;
+      ui.renderHistory();
+    }
+
+    // Eventos de UI
+    if (ui.startButton) {
+      ui.startButton.addEventListener("click", () => {
+        if (!bootReady) return;
+        sound.click();
+        completeBoot();
+      });
+    }
+    ui.choices.addEventListener("click", handleChoice);
+    document.addEventListener("keydown", handleKey);
+    ui.themeBtn.addEventListener("click", toggleTheme);
+    ui.helpBtn.addEventListener("click", () => openModal("help-modal"));
+    ui.settingsBtn.addEventListener("click", () => openModal("settings-modal"));
+    document.querySelectorAll("[data-close]").forEach((btn) => {
+      btn.addEventListener("click", (event) => {
+        const id = event.currentTarget.getAttribute("data-close");
+        closeModal(id);
+      });
+    });
+    ui.settingsModal.addEventListener("click", (event) => {
+      if (event.target === ui.settingsModal) closeModal("settings-modal");
+    });
+    ui.helpModal.addEventListener("click", (event) => {
+      if (event.target === ui.helpModal) closeModal("help-modal");
+    });
+    ui.resetBtn.addEventListener("click", () => {
+      resetSession();
+      showToast("Partida reiniciada");
+    });
+    ui.clearHistoryBtn.addEventListener("click", handleHistoryClear);
+    ui.difficulty.addEventListener("change", handleSettingsChange);
+    ui.modeSelect.addEventListener("change", handleSettingsChange);
+    ui.bestOf.addEventListener("change", handleSettingsChange);
+    ui.timerSelect.addEventListener("change", handleSettingsChange);
+    ui.soundToggle.addEventListener("change", handleSettingsChange);
+    ui.animationToggle.addEventListener("change", handleSettingsChange);
+    ui.lizardToggle.addEventListener("change", handleSettingsChange);
+    ui.coinSpeed.addEventListener("change", handleSettingsChange);
+    ui.activateDouble.addEventListener("click", () => {
+      activateDoublePoints();
+    });
+    ui.activateNoDraw.addEventListener("click", () => {
+      activateNoDraw();
+    });
+    ui.coinButtons.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        selectCoinChoice(btn.dataset.coin);
+        sound.click();
+      });
+    });
+    ui.coinFlipBtn.addEventListener("click", () => {
+      flipCoin();
+    });
+    ui.runTestsBtn.addEventListener("click", async () => {
+      if (ui.runTestsBtn.dataset.running === "true") return;
+      const originalLabel = ui.runTestsBtn.textContent;
+      ui.runTestsBtn.dataset.running = "true";
+      ui.runTestsBtn.disabled = true;
+      ui.runTestsBtn.textContent = "Ejecutando pruebas…";
+      try {
+        await runTests();
+        showToast("✅ Pruebas completadas");
+      } catch (error) {
+        console.error(error);
+        showToast(`❌ ${error.message}`);
+      } finally {
+        ui.runTestsBtn.disabled = false;
+        ui.runTestsBtn.textContent = originalLabel;
+        delete ui.runTestsBtn.dataset.running;
+      }
+    });
+
+    /*
+      =============================================================
+      Funciones de pruebas automáticas para validar la lógica principal.
+    */
+    async function runTests() {
+      const assert = (cond, msg) => {
+        if (!cond) throw new Error(`Test falló: ${msg}`);
+      };
+      const gestures = RULESETS.RPS.gestures;
+      gestures.forEach((a) => {
+        gestures.forEach((b) => {
+          const res = determineWinner(a, b, false);
+          assert(["win", "lose", "draw"].includes(res), `Resultado inválido ${res}`);
+        });
+      });
+      const extendedGestures = RULESETS.RPSLS.gestures;
+      extendedGestures.forEach((a) => {
+        extendedGestures.forEach((b) => {
+          const res = determineWinner(a, b, true);
+          assert(["win", "lose", "draw"].includes(res), `Resultado inválido extendido ${res}`);
+        });
+      });
+      for (let i = 0; i < 50; i++) {
+        const easy = ai.easy([], false);
+        const hard = ai.hard([{ player: "rock" }], false);
+        assert(gestures.includes(easy), "IA fácil fuera de rango");
+        assert(gestures.includes(hard), "IA difícil fuera de rango");
+      }
+      const historyMock = Array.from({ length: 5 }, () => ({ player: "rock" }));
+      let counterWins = 0;
+      const trials = 1000;
+      for (let i = 0; i < trials; i++) {
+        const cpu = ai.hard(historyMock, false);
+        if (determineWinner("rock", cpu, false) === "lose") counterWins += 1;
+      }
+      assert(counterWins / trials >= 0.6, "IA difícil no contraataca ≥60%");
+      stopCooldown();
+      state.session.roundLock = true;
+      startCooldown(120);
+      assert(state.session.roundLock, "Cooldown no bloquea al inicio");
+      await new Promise((resolve) => setTimeout(resolve, 200));
+      assert(!state.session.roundLock, "Cooldown no libera tras el periodo");
+      stopCooldown();
+      let heads = 0;
+      const coinTrials = 10000;
+      for (let i = 0; i < coinTrials; i++) {
+        if (flipCoinRandom() === "heads") heads += 1;
+      }
+      const ratio = heads / coinTrials;
+      assert(ratio >= 0.47 && ratio <= 0.53, "FlipCoin fuera de rango 47%-53%");
+      const testData = { prefs: { theme: "dark" }, stats: { totalGames: 42 } };
+      const persisted = storage.save(testData);
+      assert(persisted === true, "Persistencia fallida");
+      const loaded = storage.load();
+      assert(loaded && loaded.stats && loaded.stats.totalGames === 42, "Persistencia no mantiene datos");
+      storage.save({ prefs: state.prefs, stats: state.stats });
+      return true;
+    }
+
+    window.runTests = runTests;
+
+    // Inicialización
+    initFromPrefs();
+    ui.renderAll();
+    startBootSequence();
+  </script>
+</body>
+</html>
