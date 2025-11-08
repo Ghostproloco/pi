@@ -39,6 +39,35 @@
       align-items: flex-start;
       padding: 24px 12px 72px;
       transition: background var(--transition-long), color var(--transition-base);
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    body::before,
+    body::after {
+      content: "";
+      position: fixed;
+      inset: auto;
+      width: 480px;
+      height: 480px;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.55;
+      z-index: 0;
+      pointer-events: none;
+      transition: opacity var(--transition-long);
+    }
+
+    body::before {
+      top: -160px;
+      left: -120px;
+      background: radial-gradient(circle at center, rgba(59, 130, 246, 0.55), transparent 70%);
+    }
+
+    body::after {
+      bottom: -220px;
+      right: -160px;
+      background: radial-gradient(circle at center, rgba(244, 114, 182, 0.5), transparent 70%);
     }
 
     body.theme-dark {
@@ -79,6 +108,149 @@
       box-shadow: var(--shadow-soft);
       overflow: hidden;
       border: var(--border-width) solid var(--border-color);
+      position: relative;
+      z-index: 2;
+      opacity: 0;
+      transform: translateY(24px) scale(0.98);
+      transition: opacity 400ms ease, transform 420ms ease, filter 280ms ease;
+      pointer-events: none;
+    }
+
+    body.is-loading .app-shell {
+      filter: blur(10px) saturate(1.1);
+      opacity: 0.35;
+    }
+
+    body.boot-complete .app-shell {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+      pointer-events: auto;
+      filter: none;
+    }
+
+    .loading-screen {
+      position: fixed;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      background: radial-gradient(circle at top, rgba(15, 23, 42, 0.95), rgba(2, 6, 23, 0.96));
+      z-index: 9;
+      color: #f8fafc;
+      transition: opacity 380ms ease;
+    }
+
+    .loading-screen.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .loading-content {
+      text-align: center;
+      display: grid;
+      gap: 22px;
+      max-width: 420px;
+      padding: 36px;
+      background: rgba(15, 23, 42, 0.65);
+      border-radius: 28px;
+      border: 1px solid rgba(148, 163, 184, 0.35);
+      box-shadow: 0 32px 60px rgba(2, 6, 23, 0.65);
+    }
+
+    .loading-logo {
+      font-size: 0.95rem;
+      letter-spacing: 0.4rem;
+      text-transform: uppercase;
+      color: #38bdf8;
+    }
+
+    .loading-title {
+      font-size: clamp(1.8rem, 4vw, 2.4rem);
+      margin: 0;
+      font-weight: 700;
+    }
+
+    .loading-tagline {
+      margin: 0;
+      color: rgba(226, 232, 240, 0.85);
+      min-height: 1.6em;
+    }
+
+    .loading-progress {
+      width: 100%;
+      height: 12px;
+      background: rgba(30, 41, 59, 0.8);
+      border-radius: 999px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .loading-progress span {
+      display: block;
+      height: 100%;
+      width: var(--loading-progress, 0%);
+      background: linear-gradient(90deg, #38bdf8, #a855f7);
+      transition: width 260ms ease;
+    }
+
+    .loading-progress-value {
+      font-size: 0.85rem;
+      color: rgba(226, 232, 240, 0.75);
+    }
+
+    .start-btn {
+      border-radius: 999px;
+      padding: 14px 28px;
+      font-size: 1rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #38bdf8, #6366f1);
+      color: #fff;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 16px 32px rgba(99, 102, 241, 0.35);
+      transition: transform 220ms ease, box-shadow 220ms ease, opacity 200ms ease;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .start-btn.ready {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .start-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 24px 46px rgba(99, 102, 241, 0.45);
+    }
+
+    .start-btn:active {
+      transform: translateY(0);
+    }
+
+    .title-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .title-stack .subtitle {
+      margin: 0;
+      font-size: 0.9rem;
+      color: var(--subtle-text);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .app-footer {
+      margin: 0;
+      padding: 22px;
+      text-align: center;
+      color: var(--subtle-text);
+      font-size: 0.85rem;
+    }
+
+    .app-footer span {
+      color: var(--accent);
+      font-weight: 600;
     }
 
     header {
@@ -735,12 +907,27 @@
     }
   </style>
 </head>
-<body class="theme-dark">
+<body class="theme-dark is-loading">
+  <div class="loading-screen" id="loading-screen" role="dialog" aria-modal="true" aria-labelledby="loading-title">
+    <div class="loading-content">
+      <div class="loading-logo">SurgeRaps Studios</div>
+      <h2 class="loading-title" id="loading-title">Ultimate Arcade Launcher</h2>
+      <p class="loading-tagline" id="loading-tagline">Cargando graficazos…</p>
+      <div class="loading-progress" aria-hidden="true">
+        <span id="loading-progress"></span>
+      </div>
+      <div class="loading-progress-value" id="loading-progress-value">0%</div>
+      <button type="button" class="start-btn" id="start-btn" aria-label="Comenzar la partida">Entrar al menú principal</button>
+    </div>
+  </div>
   <div class="confetti" aria-hidden="true"></div>
   <div class="toast-container" aria-live="polite" aria-atomic="true"></div>
   <div class="app-shell" role="application">
     <header>
-      <h1><span>🎮</span><span id="title-label">Piedra, Papel, Tijera — Ultimate</span></h1>
+      <div class="title-stack">
+        <h1><span>🎮</span><span id="title-label">Piedra, Papel, Tijera — Ultimate</span></h1>
+        <p class="subtitle" id="studio-credit">Hecho por <strong>SurgeRaps Studios</strong></p>
+      </div>
       <div class="header-actions">
         <div class="chip" id="mode-label">Modo: Infinito</div>
         <button type="button" class="ghost" id="help-btn" aria-haspopup="dialog">Ayuda</button>
@@ -861,6 +1048,9 @@
         </div>
       </section>
     </main>
+    <footer class="app-footer" aria-label="Créditos del juego">
+      Hecho con ❤️ por <span>SurgeRaps Studios</span> · Experimenta el arcade definitivo desde tu navegador
+    </footer>
   </div>
 
   <!-- Modal de Ajustes -->
@@ -957,7 +1147,7 @@
         <h3>FlipCoin</h3>
         <p>Selecciona Cara o Cruz, lanza la moneda y espera a que termine la animación 3D (1–1.5 s). Durante la animación los controles quedan bloqueados para evitar spam. Puedes ajustar la velocidad en Ajustes y usar los atajos A (Cara), D (Cruz) y Enter (Lanzar).</p>
         <p>Logros disponibles: Calentando (1ª victoria), Imparable (racha 5), Estratega (ganar en difícil), Maratón (50 rondas en un día).</p>
-        <p>Créditos: Diseñado y desarrollado para la edición Ultimate de Piedra, Papel o Tijera.</p>
+        <p>Créditos: Hecho con cariño por el equipo creativo de SurgeRaps Studios.</p>
       </div>
     </div>
   </div>
@@ -1287,6 +1477,7 @@
         thinking: false,
         thinkingTimeout: null,
         pendingPlayer: null,
+        bootComplete: false,
         coin: {
           choice: null,
           locked: false,
@@ -1406,7 +1597,12 @@
         coinElement: document.getElementById("coin"),
         coinStatus: document.getElementById("coin-status"),
         coinFlipBtn: document.getElementById("coin-flip-btn"),
-        coinButtons: Array.from(document.querySelectorAll(".coin-btn"))
+        coinButtons: Array.from(document.querySelectorAll(".coin-btn")),
+        loadingScreen: document.getElementById("loading-screen"),
+        loadingProgress: document.getElementById("loading-progress"),
+        loadingValue: document.getElementById("loading-progress-value"),
+        startButton: document.getElementById("start-btn"),
+        loadingTagline: document.getElementById("loading-tagline")
       };
 
       /**
@@ -1421,14 +1617,20 @@
           button.dataset.gesture = gesture;
           button.innerHTML = `<span class="emoji">${ruleset.icons[gesture]}</span><span>${I18N.es.gestures[gesture]}</span>`;
           button.setAttribute("aria-label", I18N.es.gestures[gesture]);
-          button.disabled = state.session.roundLock;
+          button.disabled =
+            !state.session.bootComplete ||
+            state.session.roundLock ||
+            (state.prefs.mode === "timed" && !state.session.timerActive);
           dom.choices.appendChild(button);
         });
       };
 
       const updateChoiceAvailability = () => {
         dom.choices.querySelectorAll("button").forEach((button) => {
-          button.disabled = state.session.roundLock || (state.prefs.mode === "timed" && !state.session.timerActive);
+          button.disabled =
+            !state.session.bootComplete ||
+            state.session.roundLock ||
+            (state.prefs.mode === "timed" && !state.session.timerActive);
         });
       };
 
@@ -1458,6 +1660,12 @@
        * Actualiza el panel de progreso según el modo activo.
        */
       const renderProgress = () => {
+        if (!state.session.bootComplete) {
+          dom.progressLabel.textContent = "Menú bloqueado";
+          dom.progressSub.textContent = "Pulsa «Entrar al menú principal» para comenzar.";
+          dom.progressBar.style.width = "0%";
+          return;
+        }
         dom.progressLabel.textContent = utils.formatMode(state);
         let subtitle = "";
         if (state.prefs.mode === "infinite") {
@@ -1487,6 +1695,16 @@
        */
       const renderRound = () => {
         const ruleset = utils.getRuleset();
+        if (!state.session.bootComplete) {
+          dom.cpuChoice.classList.remove("thinking");
+          dom.roundMessage.textContent = "🎬 Pulsa «Entrar al menú principal» para iniciar la partida";
+          dom.roundMessage.className = "result-chip draw";
+          dom.playerChoice.textContent = "Esperando inicio";
+          dom.cpuChoice.textContent = "Menú inicial";
+          dom.lastResult.textContent = "⌛ Preparando experiencia";
+          dom.lastResult.className = "result-chip draw";
+          return;
+        }
         if (state.session.thinking) {
           if (state.session.pendingPlayer) {
             dom.playerChoice.textContent = `${ruleset.icons[state.session.pendingPlayer]} ${I18N.es.gestures[state.session.pendingPlayer]}`;
@@ -1670,6 +1888,10 @@
       return { ...dom, renderAll, renderChoices, renderProgress, renderRound, renderScoreboard, renderHistory, renderAnalytics, renderSettings, renderRules, renderAchievements, renderShortcuts, updateChoiceAvailability };
     })();
 
+    let bootReady = false;
+    let bootProgressTimer = null;
+    let bootMessageTimer = null;
+
     /*
       =============================================================
       Sistema de toasts para notificaciones cortas.
@@ -1685,6 +1907,94 @@
         toast.addEventListener("transitionend", remove, { once: true });
         setTimeout(remove, 600);
       }, 2400);
+    }
+
+    function startBootSequence() {
+      if (state.session.bootComplete) return;
+      if (!ui.loadingScreen) {
+        state.session.bootComplete = true;
+        document.body.classList.remove("is-loading");
+        document.body.classList.add("boot-complete");
+        bootReady = true;
+        return;
+      }
+      const messages = [
+        "Potenciando el menú principal…",
+        "Afinando la IA estratégica…",
+        "Cargando graficazos y partículas…",
+        "Sincronizando logros y rachas…",
+        "Calibrando el modo FlipCoin…"
+      ];
+      let messageIndex = 0;
+      const rotateMessage = () => {
+        if (!ui.loadingTagline) return;
+        ui.loadingTagline.textContent = messages[messageIndex % messages.length];
+        messageIndex += 1;
+      };
+      rotateMessage();
+      bootMessageTimer = setInterval(rotateMessage, 1600);
+
+      let progress = 0;
+      const updateProgress = () => {
+        progress = Math.min(100, progress + Math.random() * 18 + 7);
+        if (ui.loadingProgress) {
+          ui.loadingProgress.style.setProperty("--loading-progress", `${progress}%`);
+        }
+        if (ui.loadingValue) {
+          ui.loadingValue.textContent = `${Math.round(progress)}%`;
+        }
+        if (progress >= 100) {
+          if (bootProgressTimer) {
+            clearInterval(bootProgressTimer);
+            bootProgressTimer = null;
+          }
+          bootReady = true;
+          if (bootMessageTimer) {
+            clearInterval(bootMessageTimer);
+            bootMessageTimer = null;
+          }
+          if (ui.loadingTagline) {
+            ui.loadingTagline.textContent = "Hecho por SurgeRaps Studios — ¡Listo para jugar!";
+          }
+          if (ui.startButton) {
+            ui.startButton.classList.add("ready");
+            ui.startButton.focus();
+          }
+        }
+      };
+      updateProgress();
+      bootProgressTimer = setInterval(updateProgress, 340);
+      setTimeout(() => {
+        progress = 100;
+        updateProgress();
+      }, 2600);
+    }
+
+    function completeBoot() {
+      if (state.session.bootComplete || !bootReady) {
+        return;
+      }
+      if (bootProgressTimer) {
+        clearInterval(bootProgressTimer);
+        bootProgressTimer = null;
+      }
+      if (bootMessageTimer) {
+        clearInterval(bootMessageTimer);
+        bootMessageTimer = null;
+      }
+      state.session.bootComplete = true;
+      document.body.classList.remove("is-loading");
+      document.body.classList.add("boot-complete");
+      if (ui.loadingScreen) {
+        ui.loadingScreen.classList.add("hidden");
+        setTimeout(() => ui.loadingScreen.remove(), 600);
+      }
+      if (ui.startButton) {
+        ui.startButton.setAttribute("disabled", "true");
+      }
+      ui.renderAll();
+      ui.updateChoiceAvailability();
+      setTimeout(() => showToast("✨ Bienvenido a la Ultimate Edition"), 420);
     }
 
     /*
@@ -1814,6 +2124,9 @@
     }
 
     function queueRound(playerGesture) {
+      if (!state.session.bootComplete) {
+        return;
+      }
       if (state.session.roundLock) {
         if (state.session.cooldownActive) {
           const remainingMs = Math.max(0, state.session.cooldownEndsAt - utils.now());
@@ -1845,6 +2158,7 @@
     }
 
     function selectCoinChoice(choice) {
+      if (!state.session.bootComplete) return;
       if (state.session.coin.locked) return;
       state.session.coin.choice = choice;
       ui.coinButtons.forEach((btn) => {
@@ -1855,6 +2169,9 @@
     }
 
     function flipCoin() {
+      if (!state.session.bootComplete) {
+        return;
+      }
       if (state.session.coin.locked) {
         showToast("🪙 Espera a que termine la animación");
         return;
@@ -2107,6 +2424,7 @@
       Manejo de interacciones: clicks, teclado, modales.
     */
     function handleChoice(event) {
+      if (!state.session.bootComplete) return;
       const target = event.target.closest(".choice-btn");
       if (!target) return;
       const gesture = target.dataset.gesture;
@@ -2114,6 +2432,16 @@
     }
 
     function handleKey(event) {
+      if (!state.session.bootComplete) {
+        if ((event.key === "Enter" || event.key === " ") && bootReady && ui.startButton) {
+          event.preventDefault();
+          if (!ui.startButton.classList.contains("ready")) return;
+          ui.startButton.classList.add("active");
+          setTimeout(() => ui.startButton.classList.remove("active"), 180);
+          ui.startButton.click();
+        }
+        return;
+      }
       const activeTag = document.activeElement && document.activeElement.tagName;
       if (activeTag && ["INPUT", "SELECT", "TEXTAREA"].includes(activeTag)) {
         return;
@@ -2206,6 +2534,13 @@
     }
 
     // Eventos de UI
+    if (ui.startButton) {
+      ui.startButton.addEventListener("click", () => {
+        if (!bootReady) return;
+        sound.click();
+        completeBoot();
+      });
+    }
     ui.choices.addEventListener("click", handleChoice);
     document.addEventListener("keydown", handleKey);
     ui.themeBtn.addEventListener("click", toggleTheme);
@@ -2334,6 +2669,7 @@
     // Inicialización
     initFromPrefs();
     ui.renderAll();
+    startBootSequence();
   </script>
 </body>
 </html>
